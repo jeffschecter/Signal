@@ -1,5 +1,7 @@
 """Endpoints for working with a user's account."""
 
+import datetime
+
 from common import lib
 from handlers import util
 from storage import interface
@@ -11,17 +13,13 @@ class Create(util.RequestHandler):
       self.Arg("name"),
       self.Env("latitude"),
       self.Env("longitude"))
-    self.Set("info", lib.MergeModelsToDict(
-      *objs,
-      uid=objs[0].key.id()))
+    self.UpdateArgs(lib.MergeModelsToDict(*objs, uid=objs[0].key.id()))
 
 
 class Load(util.AuthedHandler):
   def Handle(self):
     objs = interface.LoadAccount(self.Env("uid"))
-    self.Set("info", lib.MergeModelsToDict(
-      *objs,
-      uid=info[0].key.id()))
+    self.UpdateArgs(lib.MergeModelsToDict(*objs, uid=objs[0].key.id()))
 
 
 class SetIntro(util.AuthedHandler):
@@ -49,6 +47,7 @@ class Deactivate(util.AuthedHandler):
     interface.UpdateAccount(
       self.Env("uid"),
       active=False)
+    self.SetArg("timestamp", datetime.datetime.today())
 
 
 class Reactivate(util.AuthedHandler):
@@ -56,6 +55,7 @@ class Reactivate(util.AuthedHandler):
     interface.UpdateAccount(
       self.Env("uid"),
       active=True)
+    self.SetArg("timestamp", datetime.datetime.today())
     
 
 class Logout(util.AuthedHandler):

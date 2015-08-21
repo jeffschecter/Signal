@@ -6,6 +6,12 @@ from google.appengine.ext import ndb
 from storage import model
 
 
+def Guarantee(obj):
+  if obj is None:
+    raise LookupError("Expected to retrieve datastore object but got None")
+  return obj
+
+
 # --------------------------------------------------------------------------- #
 # Working with user accounts.                                                 #
 # --------------------------------------------------------------------------- #
@@ -14,17 +20,14 @@ from storage import model
 def CreateAccount(name, latitude, longitude, now=None):
   """Create a new account.
   """
-  # Prep objects for insertion
   now = now or datetime.datetime.today()
   user = model.User(name=name, joined=now)
+  user.put()
   match = model.MatchParameters(
     id=1, parent=user.key, last_activity=now,
     latitude=latitude, longitude=longitude)
-  search = model.SearchSettings(id=1, parent=user.key)
-
-  # Send updates to the db
-  user.put()
   match.put()
+  search = model.SearchSettings(id=1, parent=user.key)
   search.put()
   return user, match, search
 
@@ -43,24 +46,24 @@ def UpdateAccount(uid, **kwargs):
   """
   # Load the needed objects
   user_key = ndb.Key(model.User, uid)
-  user, match, search = user_key.get(), None, None
-  if not user:
-    raise LookupError("User {u} does not exist.".format(u=uid))
-  for argname, val in kwargs:
+  user, match, search = None, None, None
+  for argname, val in kwargs.iteritems():
     if argname in (
         "joined", "last_activity"
         "latitude", "longitude", "country", "region", "city"):
       raise ValueError(
         "You can't set {a} in UpdateAccount.".format(a=argname))
     elif argname in model.User._properties:
+      if not user:
+        user = Guarantee(user_key.get())
       setattr(user, argname, val)
     elif argname in model.MatchParameters._properties:
       if not match:
-        match = model.MatchParameters.get_by_id(1, parent=user_key)
+        match = Guarantee(model.MatchParameters.get_by_id(1, parent=user_key))
       setattr(match, argname, val)
     elif argname in model.SearchSettings._properties:
       if not search:
-        search = model.SearchSettings.get_by_id(1, parent=user_key)
+        search = Guarantee(model.SearchSettings.get_by_id(1, parent=user_key))
       setattr(search, argname, val)
     else:
       raise ValueError(
@@ -89,9 +92,7 @@ def Ping(uid, latitude, longitude):
     (model.MatchParameters) The newly updated match params.
   """
   user_key = ndb.Key(model.User, uid)
-  match = model.MatchParameters.get_by_id(1, parent=user_key)
-  if not match:
-    raise LookupError("User {u} is incomplete.".format(u=uid))
+  match = Guarantee(model.MatchParameters.get_by_id(1, parent=user_key))
   match.latitude = latitude
   match.longitude = longitude
   match.last_activity = datetime.datetime.today()
@@ -99,7 +100,6 @@ def Ping(uid, latitude, longitude):
   return match
 
 
-@ndb.transactional
 def LoadAccount(uid):
   """Loads all of a user's account info.
 
@@ -109,9 +109,7 @@ def LoadAccount(uid):
   Returns:
     (dict) Account information.
   """
-  user = model.User.get_by_id(uid)
-  match = model.MatchParameters.get_by_id(1, parent=user.key)
-  search = model.SearchSettings.get_by_id(1, parent=user.key)
-  if not user and match and search:
-    raise LookupError("User {u} is incomplete.".format(u=uid))
+  user = Guarantee(model.User.get_by_id(uid))
+  match = Guarantee(model.MatchParameters.get_by_id(1, parent=user.key))
+  search = Guarantee(model.SearchSettings.get_by_id(1, parent=user.key))
   return user, match, search
