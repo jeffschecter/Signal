@@ -5,6 +5,10 @@ import logging
 import webapp2
 
 
+class VerificationError(Exception):
+  pass
+
+
 def JsonEncoder(obj):
   # For date, time, and datetime, convert to isoformat string
   if hasattr(obj, 'isoformat'):
@@ -28,7 +32,7 @@ class RequestHandler(webapp2.RequestHandler):
     self.Respond()
 
   def Set(self, k, v):
-    self.RESPONSE_DATA[k] = v
+    self.response_data[k] = v
 
   def Arg(self, x):
     return self.args.get(x)
@@ -37,29 +41,27 @@ class RequestHandler(webapp2.RequestHandler):
     return self.env.get(x)
 
   def Verify(self):
+    """Subclasses should overwrite this method to check expectations and raise
+    an VerificationError when requirements are not satisfied."""
     pass
 
   def Respond(self):
     self.response.headers['Content-Type'] = 'text/json'
-    self.RESPONSE_DATA = {}
+    self.response_data = {}
     try:
       query = json.loads(self.request.params.get('data'))
       self.env = query.get("env", {})
       self.args = query.get("args", {})
       self.Verify()
       self.Handle()
-      self.RESPONSE_DATA = json.dumps(self.RESPONSE_DATA, default=JsonEncoder)
+      response_str = json.dumps(self.response_data, default=JsonEncoder)
     except Exception as e:
       logging.exception(e)
-      self.RESPONSE_DATA = json.dumps({
+      response_str = json.dumps({
         "error": type(e).__name__,
         "error_string": str(e)})
     finally:
-      self.response.write(self.RESPONSE_DATA)
-
-
-class AuthenticationError(Exception):
-  pass
+      self.response.write(self.response_str)
 
 
 class AuthedHandler(RequestHandler):
