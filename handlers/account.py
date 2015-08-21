@@ -10,16 +10,13 @@ class Create(util.RequestHandler):
     objs = interface.CreateAccount(
       self.Arg("name"),
       self.Env("latitude"),
-      self.Env("longitude"),
-      self.Env("country"),
-      self.Env("region"),
-      self.Env("city"))
+      self.Env("longitude"))
     self.Set("info", lib.MergeModelsToDict(
       *objs,
       uid=objs[0].key.id()))
 
 
-class Load(util.RequestHandler):
+class Load(util.AuthedHandler):
   def Handle(self):
     objs = interface.LoadAccount(self.Env("uid"))
     self.Set("info", lib.MergeModelsToDict(
@@ -27,54 +24,51 @@ class Load(util.RequestHandler):
       uid=info[0].key.id()))
 
 
-class SetIntro(util.RequestHandler):
+class SetIntro(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class SetImage(util.RequestHandler):
+class SetImage(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Bio(util.RequestHandler):
+class Bio(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Preferences(util.RequestHandler):
+class Preferences(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Deactivate(util.RequestHandler):
+class Deactivate(util.AuthedHandler):
   def Handle(self):
     interface.UpdateAccount(
       self.Env("uid"),
       active=False)
 
 
-class Reactivate(util.RequestHandler):
+class Reactivate(util.AuthedHandler):
   def Handle(self):
     interface.UpdateAccount(
       self.Env("uid"),
       active=True)
     
 
-class Logout(util.RequestHandler):
+class Logout(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Ping(util.RequestHandler):
+class Ping(util.AuthedHandler):
   def Handle(self):
     interface.Ping(
       self.Env("uid"),
       self.Env("latitude"),
-      self.Env("longitude"),
-      self.Env("country"),
-      self.Env("region"),
-      self.Env("city"))
+      self.Env("longitude"))
 
 
 ROUTES = (

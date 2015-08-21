@@ -5,7 +5,8 @@ import logging
 import webapp2
 
 
-def JsonHandler(obj):
+def JsonEncoder(obj):
+  # For date, time, and datetime, convert to isoformat string
   if hasattr(obj, 'isoformat'):
     return obj.isoformat()
   else:
@@ -35,6 +36,9 @@ class RequestHandler(webapp2.RequestHandler):
   def Env(self, x):
     return self.env.get(x)
 
+  def Verify(self):
+    pass
+
   def Respond(self):
     self.response.headers['Content-Type'] = 'text/json'
     self.RESPONSE_DATA = {}
@@ -42,8 +46,9 @@ class RequestHandler(webapp2.RequestHandler):
       query = json.loads(self.request.params.get('data'))
       self.env = query.get("env", {})
       self.args = query.get("args", {})
+      self.Verify()
       self.Handle()
-      self.RESPONSE_DATA = json.dumps(self.RESPONSE_DATA, default=JsonHandler)
+      self.RESPONSE_DATA = json.dumps(self.RESPONSE_DATA, default=JsonEncoder)
     except Exception as e:
       logging.exception(e)
       self.RESPONSE_DATA = json.dumps({
@@ -51,6 +56,21 @@ class RequestHandler(webapp2.RequestHandler):
         "error_string": str(e)})
     finally:
       self.response.write(self.RESPONSE_DATA)
+
+
+class AuthenticationError(Exception):
+  pass
+
+
+class AuthedHandler(RequestHandler):
+
+  def __init__(self, *args, **kwargs):
+    AuthedHandler.__init__(self, *args, **kwargs)
+
+  def Verify(self):
+    #TODO Actually authenticate
+    if not self.Env("uid"):
+      raise AuthenticationError("Auth failed: {env}".format(env=self.env))
 
 
 def TODO():

@@ -3,37 +3,37 @@
 from handlers import util
 
 
-class Load(util.RequestHandler):
+class Load(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Next(util.RequestHandler):
+class Next(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Listen(util.RequestHandler):
+class Listen(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Save(util.RequestHandler):
+class Save(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Unsave(util.RequestHandler):
+class Unsave(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Block(util.RequestHandler):
+class Block(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Unblock(util.RequestHandler):
+class Unblock(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 

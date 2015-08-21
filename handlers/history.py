@@ -3,7 +3,7 @@
 from handlers import util
 
 
-class Load(util.RequestHandler):
+class Load(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 

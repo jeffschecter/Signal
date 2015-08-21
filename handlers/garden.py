@@ -3,17 +3,17 @@
 from handlers import util
 
 
-class Load(util.RequestHandler):
+class Load(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Send(util.RequestHandler):
+class Send(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Water(util.RequestHandler):
+class Water(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 

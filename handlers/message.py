@@ -3,12 +3,12 @@
 from handlers import util
 
 
-class Listen(util.RequestHandler):
+class Listen(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
 
-class Send(util.RequestHandler):
+class Send(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 

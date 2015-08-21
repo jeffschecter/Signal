@@ -32,9 +32,6 @@ class MatchParameters(ndb.Model):
   last_activity = ndb.DateTimeProperty()
   latitude = ndb.FloatProperty()
   longitude = ndb.FloatProperty()
-  country = ndb.StringProperty()
-  region = ndb.StringProperty()
-  city = ndb.StringProperty()
   active = ndb.BooleanProperty(default=True)
 
 

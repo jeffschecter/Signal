@@ -6,8 +6,12 @@ from google.appengine.ext import ndb
 from storage import model
 
 
+# --------------------------------------------------------------------------- #
+# Working with user accounts.                                                 #
+# --------------------------------------------------------------------------- #
+
 @ndb.transactional(xg=True)
-def CreateAccount(name, latitude, longitude, country, region, city, now=None):
+def CreateAccount(name, latitude, longitude, now=None):
   """Create a new account.
   """
   # Prep objects for insertion
@@ -15,8 +19,7 @@ def CreateAccount(name, latitude, longitude, country, region, city, now=None):
   user = model.User(name=name, joined=now)
   match = model.MatchParameters(
     id=1, parent=user.key, last_activity=now,
-    latitude=latitude, longitude=longitude,
-    country=country, region=region, city=city)
+    latitude=latitude, longitude=longitude)
   search = model.SearchSettings(id=1, parent=user.key)
 
   # Send updates to the db
@@ -74,7 +77,7 @@ def UpdateAccount(uid, **kwargs):
 
 
 @ndb.transactional
-def Ping(uid, latitude, longitude, country, region, city):
+def Ping(uid, latitude, longitude):
   """Set's a user's location and last active date.
 
   Args:
@@ -91,9 +94,6 @@ def Ping(uid, latitude, longitude, country, region, city):
     raise LookupError("User {u} is incomplete.".format(u=uid))
   match.latitude = latitude
   match.longitude = longitude
-  match.country = country
-  match.region = region
-  match.city = city
   match.last_activity = datetime.datetime.today()
   match.put()
   return match
