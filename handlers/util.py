@@ -61,7 +61,7 @@ class RequestHandler(webapp2.RequestHandler):
         "error": type(e).__name__,
         "error_string": str(e)})
     finally:
-      self.response.write(self.response_str)
+      self.response.write(response_str)
 
 
 class AuthedHandler(RequestHandler):
