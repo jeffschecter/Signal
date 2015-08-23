@@ -20,6 +20,7 @@ DEFAULT_RADIUS = 5
 
 
 DEFAULT_TEST_ENV = {
+  "debug": True,
   "uid": DEFAULT_UID,
   "latitude": DEFAULT_LATITUDE,
   "longitude": DEFAULT_LONGITUDE}
@@ -65,8 +66,7 @@ class TestApi(object):
       env = resp['env']
       args = resp['args']
       if not expect_err:
-        assert not env.get('error'), "{t}: {s}".format(
-          t=env['error_type'], s=env['error_string'])
+        assert not env.get('error'), env['error_report']
       return env, args
 
 

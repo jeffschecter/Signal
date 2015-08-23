@@ -34,8 +34,8 @@ class AccountHandlerTest(unittest.TestCase):
     self.assertEqual(match.longitude, testutils.DEFAULT_LONGITUDE)
 
   def testLoad(self):
-    env, args = self.api.Call("/account/load", uid=1)
-    self.assertEqual(args["uid"], 1)
+    env, args = self.api.Call("/account/load")
+    self.assertEqual(args["uid"], testutils.DEFAULT_UID)
 
   def testSetIntro(self):
     env, args = self.api.Call("/account/set_intro", blob="")
@@ -60,22 +60,21 @@ class AccountHandlerTest(unittest.TestCase):
       accept_female_sexualities=[],
       accept_other_sexualities=[])
 
-  def testDeactivate(self):
+  def testDeactivateReactivate(self):
+    _, match, _ = interface.LoadAccount(testutils.DEFAULT_UID)
+    self.assertEqual(match.active, True)
     env, args = self.api.Call("/account/deactivate")
-    self.assertTrue(args.get("timestamp"))
-
-  def testReactivate(self):
+    _, match, _ = interface.LoadAccount(testutils.DEFAULT_UID)
+    self.assertEqual(match.active, False)
     env, args = self.api.Call("/account/reactivate")
-    self.assertTrue(args.get("timestamp"))
+    _, match, _ = interface.LoadAccount(testutils.DEFAULT_UID)
+    self.assertEqual(match.active, True)
 
   def testLogout(self):
     env, args = self.api.Call("/account/logout")
 
   def testPing(self):
-    env, args = self.api.Call("account/ping")
-    self.asertEqual(
-      set(args.keys()),
-      set(["latitude", "longitude", "country", "region", "city"]))
+    env, args = self.api.Call("/account/ping")
 
 
 if __name__ == "__main__":

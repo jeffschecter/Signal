@@ -18,7 +18,7 @@ HANDLER_MODULES = (
   )
 
 
-ROUTES = ()
+ROUTES = []
 for module in HANDLER_MODULES:
   ROUTES += module.ROUTES
 

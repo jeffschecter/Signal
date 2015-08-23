@@ -1,4 +1,4 @@
-"""Interface for retrieving and writing data."""
+"""Interface for retrieving and writing data to Datastore."""
 
 import datetime
 
@@ -15,6 +15,21 @@ def Guarantee(obj):
 # --------------------------------------------------------------------------- #
 # Working with user accounts.                                                 #
 # --------------------------------------------------------------------------- #
+
+def LoadAccount(uid):
+  """Loads all of a user's account info.
+
+  Args:
+    uid: (int) The user's object id.
+
+  Returns:
+    (dict) Account information.
+  """
+  user = Guarantee(model.User.get_by_id(uid))
+  match = Guarantee(model.MatchParameters.get_by_id(1, parent=user.key))
+  search = Guarantee(model.SearchSettings.get_by_id(1, parent=user.key))
+  return user, match, search
+
 
 @ndb.transactional(xg=True)
 def CreateAccount(name, latitude, longitude, now=None):
@@ -48,9 +63,7 @@ def UpdateAccount(uid, **kwargs):
   user_key = ndb.Key(model.User, uid)
   user, match, search = None, None, None
   for argname, val in kwargs.iteritems():
-    if argname in (
-        "joined", "last_activity"
-        "latitude", "longitude", "country", "region", "city"):
+    if argname in ("joined", "last_activity", "latitude", "longitude"):
       raise ValueError(
         "You can't set {a} in UpdateAccount.".format(a=argname))
     elif argname in model.User._properties:
@@ -98,18 +111,3 @@ def Ping(uid, latitude, longitude):
   match.last_activity = datetime.datetime.today()
   match.put()
   return match
-
-
-def LoadAccount(uid):
-  """Loads all of a user's account info.
-
-  Args:
-    uid: (int) The user's object id.
-
-  Returns:
-    (dict) Account information.
-  """
-  user = Guarantee(model.User.get_by_id(uid))
-  match = Guarantee(model.MatchParameters.get_by_id(1, parent=user.key))
-  search = Guarantee(model.SearchSettings.get_by_id(1, parent=user.key))
-  return user, match, search

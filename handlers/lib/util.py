@@ -4,6 +4,8 @@ import json
 import logging
 import webapp2
 
+from google.appengine.ext import ndb
+
 
 # --------------------------------------------------------------------------- #
 #  Some utilities.                                                            #
@@ -19,9 +21,9 @@ def JsonEncoder(obj):
     return obj.isoformat()
   else:
     raise TypeError(
-      "Object of type {ty} with value of {val} is not JSON serializable".format(
-        ty=type(obj),
-        val=repr(obj)))
+      "Object of type {t} with value of {v} is not JSON serializable".format(
+        t=type(obj),
+        v=repr(obj)))
 
 
 def TODO():
@@ -34,8 +36,8 @@ def TODO():
 
 class RequestHandler(webapp2.RequestHandler):
 
-  def __init__(self, *args, **kwargs):
-    webapp2.RequestHandler.__init__(self, *args, **kwargs)
+  in_format = ndb.Expando
+  out_format = ndb.Expando
 
   def get(self):
     self.Respond()
@@ -46,22 +48,47 @@ class RequestHandler(webapp2.RequestHandler):
   def SetArg(self, k, v):
     self.response_args[k] = v
 
-  def UpdateArgs(self, d={}, **kwargs):
-    self.response_args.update(d)
+  def UpdateArgs(self, *models, **kwargs):
+    for model in models:
+      d = model if type(model) == dict else model.to_dict()
+      for k, v in d.iteritems():
+        if v not in ([], None):
+          self.SetArg(k, v)
     self.response_args.update(kwargs)
+
+  def GetArg(self, x):
+    return self.args.get(x)
 
   def SetEnv(self, k, v):
     self.response_env[k] = v
 
-  def Arg(self, x):
-    return self.args.get(x)
-
-  def Env(self, x):
+  def GetEnv(self, x):
     return self.env.get(x)
 
-  def Verify(self):
-    """Subclasses should overwrite this method to check expectations and raise
-    an VerificationError when requirements are not satisfied."""
+  def VerifyIn(self):
+    try:
+      self.in_format(**self.args)._check_initialized()
+      self._VerifyIn()
+    except Exception as e:
+      raise VerificationError(
+        "While checking input: {t}: {s}".format(t=type(e).__name__, s=str(e)))
+
+  def _VerifyIn(self):
+    """Subclasses should override _VerifyIn to perform any additional checks
+    required to validate the request."""
+    pass
+
+  def VerifyOut(self):
+    try:
+      self.out_format(**self.response_args)._check_initialized()
+      self._VerifyOut()
+    except Exception as e:
+      raise VerificationError(
+        "While checking output: {t}: {s}".format(t=type(e).__name__, s=str(e)))
+
+  def _VerifyOut(self):
+    """Subclasses should override _VerifyOut to perform any additional checks
+    required to validate the response."""
     pass
 
   def Output(self, **kwargs):
@@ -77,23 +104,24 @@ class RequestHandler(webapp2.RequestHandler):
       query = json.loads(self.request.params.get('data'))
       self.env = query.get("env", {})
       self.args = query.get("args", {})
-      self.Verify()
+      self.VerifyIn()
       self.Handle()
+      self.VerifyOut()
     except Exception as e:
       logging.exception(e)
       self.SetEnv("error", True)
-      self.SetEnv("error_type", type(e).__name__)
-      self.SetEnv("error_string", str(e))
+      if self.GetEnv("debug"):
+        self.SetEnv(
+          "error_report", "{t}: {s}".format(t=type(e).__name__, s=str(e)))
+      else:
+        self.SetEnv("error_report", "Something went wrong.")
     finally:
       self.response.write(self.Output())
 
 
 class AuthedHandler(RequestHandler):
 
-  def __init__(self, *args, **kwargs):
-    RequestHandler.__init__(self, *args, **kwargs)
-
-  def Verify(self):
+  def _Verify(self):
     #TODO Actually authenticate
-    if not self.Env("uid"):
+    if not self.GetEnv("uid"):
       raise AuthenticationError("Auth failed: {env}".format(env=self.env))
