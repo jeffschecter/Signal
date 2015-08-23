@@ -6,10 +6,26 @@ from google.appengine.ext import ndb
 from storage import model
 
 
+# --------------------------------------------------------------------------- #
+# Some utilities.                                                             #
+# --------------------------------------------------------------------------- #
+
 def Guarantee(obj):
   if obj is None:
     raise LookupError("Expected to retrieve datastore object but got None")
   return obj
+
+
+def UKey(uid):
+  return ndb.Key(model.User, uid)
+
+
+def GetUser(uid):
+  return Guarantee(model.User.get_by_id(uid))
+
+
+def GetForUid(model_class, uid):
+  return Guarantee(model_class.get_by_id(1, parent=UKey(uid)))
 
 
 # --------------------------------------------------------------------------- #
@@ -25,9 +41,9 @@ def LoadAccount(uid):
   Returns:
     (dict) Account information.
   """
-  user = Guarantee(model.User.get_by_id(uid))
-  match = Guarantee(model.MatchParameters.get_by_id(1, parent=user.key))
-  search = Guarantee(model.SearchSettings.get_by_id(1, parent=user.key))
+  user = GetUser(uid)
+  match = GetForUid(model.MatchParameters, uid)
+  search = GetForUid(model.SearchSettings, uid)
   return user, match, search
 
 
@@ -60,7 +76,6 @@ def UpdateAccount(uid, **kwargs):
     updated objects.
   """
   # Load the needed objects
-  user_key = ndb.Key(model.User, uid)
   user, match, search = None, None, None
   for argname, val in kwargs.iteritems():
     if argname in ("joined", "last_activity", "latitude", "longitude"):
@@ -68,15 +83,15 @@ def UpdateAccount(uid, **kwargs):
         "You can't set {a} in UpdateAccount.".format(a=argname))
     elif argname in model.User._properties:
       if not user:
-        user = Guarantee(user_key.get())
+        user = GetUser(uid)
       setattr(user, argname, val)
     elif argname in model.MatchParameters._properties:
       if not match:
-        match = Guarantee(model.MatchParameters.get_by_id(1, parent=user_key))
+        match = GetForUid(model.MatchParameters, uid)
       setattr(match, argname, val)
     elif argname in model.SearchSettings._properties:
       if not search:
-        search = Guarantee(model.SearchSettings.get_by_id(1, parent=user_key))
+        search = GetForUid(model.SearchSettings, uid)
       setattr(search, argname, val)
     else:
       raise ValueError(
@@ -92,9 +107,8 @@ def UpdateAccount(uid, **kwargs):
   return user, match, search
 
 
-@ndb.transactional
 def Ping(uid, latitude, longitude):
-  """Set's a user's location and last active date.
+  """Sets a user's location and last active date.
 
   Args:
     uid: (int) The user's object id.
@@ -104,10 +118,36 @@ def Ping(uid, latitude, longitude):
   Returns:
     (model.MatchParameters) The newly updated match params.
   """
-  user_key = ndb.Key(model.User, uid)
-  match = Guarantee(model.MatchParameters.get_by_id(1, parent=user_key))
+  match = GetForUid(model.MatchParameters, uid)
   match.latitude = latitude
   match.longitude = longitude
   match.last_activity = datetime.datetime.today()
   match.put()
   return match
+
+
+def SetIntro(uid, blob):
+  """Sets a user's audio intro.
+
+  Args:
+    uid: (int) The user's object id.
+    blob: (unicode) Raw AAC file bytestring.
+  """
+  blob = str(blob)
+  #TODO validate file format and size
+  user_key = UKey(uid)
+  intro = model.IntroFile(id=1, parent=user_key, blob=blob)
+  intro.put()
+
+def SetImage(uid, blob):
+  """Sets a user's chat image.
+
+  Args:
+    uid: (int) The user's object id.
+    blob: (unicode) Raw png file bytestring.
+  """
+  blob = str(blob)
+  #TODO validate file format and size, and image dimensions
+  user_key = UKey(uid)
+  image = model.ImageFile(id=1, parent=user_key, blob=blob)
+  image.put()

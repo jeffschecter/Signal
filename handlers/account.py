@@ -28,6 +28,8 @@ class Create(util.RequestHandler):
   out_format = CreateOutformat
 
   def Handle(self):
+    #TODO figure out fb accoutn linking etc
+    util.TODO()
     user, unused_match, unused_search = interface.CreateAccount(
       self.GetArg("name"),
       self.GetEnv("latitude"),
@@ -78,22 +80,19 @@ ROUTES.append(('/account/load/*', Load))
 # Upload your audio introduction.                                             #
 # --------------------------------------------------------------------------- #
 
-class SetIntroOutformat(ndb.Model):
-  pass
-
 class SetIntro(util.AuthedHandler):
 
   in_format = ioformat.Blob
-  out_format = SetIntroOutformat
+  out_format = ioformat.Trivial
 
   def Handle(self):
-    util.TODO()
+    interface.SetIntro(self.GetEnv("uid"), self.GetArg("blob"))
 
 ROUTES.append(('/account/set_intro/*', SetIntro))
 
 
 # --------------------------------------------------------------------------- #
-# Set your chat imge.                                                         #
+# Set your chat image.                                                         #
 # --------------------------------------------------------------------------- #
 
 class SetImageOutformat(ndb.Model):
@@ -106,7 +105,7 @@ class SetImage(util.AuthedHandler):
   out_format = SetImageOutformat
 
   def Handle(self):
-    util.TODO()
+    interface.SetImage(self.GetEnv("uid"), self.GetArg("blob"))
 
 ROUTES.append(('/account/set_image/*', SetImage))
 
@@ -116,23 +115,28 @@ ROUTES.append(('/account/set_image/*', SetImage))
 # --------------------------------------------------------------------------- #
 
 class BioInformat(ndb.Model):
-  gender = ndb.IntegerProperty(required=True)
+  gender = ndb.IntegerProperty()
   gender_string = ndb.StringProperty()
-  sexuality = ndb.IntegerProperty(required=True)
+  sexuality = ndb.IntegerProperty()
   sexuality_string = ndb.StringProperty()
-
-
-class BioOutformat(ndb.Model):
-  pass
 
 
 class Bio(util.AuthedHandler):
 
   in_format = BioInformat
-  out_format = BioOutformat
+  out_format = ioformat.Trivial
+
+  def _VerifyIn(self):
+    if self.GetArg("gender") is None and self.GetArg("sexuality") is None:
+      raise ValueError("Must specify gender or sexuality.")
+    if self.GetArg("gender") != 2 and self.GetArg("gender_string"):
+      raise ValueError("Only set a gender string if gender == 2.")
+    if self.GetArg("sexuality") != 3 and self.GetArg("sexuality_string"):
+      raise ValueError("Only set a sexuality string if sexuality == 3.")
 
   def Handle(self):
-    util.TODO()
+    interface.UpdateAccount(self.GetEnv("uid"), **self.args)
+
 
 ROUTES.append(('/account/bio/*', Bio))
 
@@ -144,10 +148,10 @@ ROUTES.append(('/account/bio/*', Bio))
 class Preferences(util.AuthedHandler):
 
   in_format = model.SearchSettings
-  out_format = model.SearchSettings
+  out_format = ioformat.Trivial
 
   def Handle(self):
-    util.TODO()
+    interface.UpdateAccount(self.GetEnv("uid"), **self.args)
 
 ROUTES.append(('/account/preferences/*', Preferences))
 

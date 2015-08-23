@@ -1,10 +1,9 @@
 """Utilities for testing the app."""
 
+import api
 import datetime
 import json
 import webtest
-
-import api
 
 from google.appengine.datastore import datastore_stub_util
 from google.appengine.ext import ndb
@@ -71,7 +70,7 @@ class TestApi(object):
 
 
 # --------------------------------------------------------------------------- #
-#  Provisioner that populates the stubbed out appengine resources.            #
+#  Populate the stubbed out appengine data store with fake users.             #
 # --------------------------------------------------------------------------- #
 
 # These mappings are reasonable, not definitive.

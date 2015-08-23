@@ -20,11 +20,29 @@ class User(ndb.Model):
   joined = ndb.DateTimeProperty()
 
 
+class IntroFile(ndb.Model):
+  """A user's audio intro.
+
+  Ancestor: (User) The user
+  Name: 1
+  """
+  blob = ndb.BlobProperty(required=True)
+
+
+class ImageFile(ndb.Model):
+  """A user's chat image.
+
+  Ancestor: (User) The user
+  Name: 1
+  """
+  blob = ndb.BlobProperty(required=True)
+
+
 class MatchParameters(ndb.Model):
   """Defines user properties indexed for finding matches.
 
   Ancestor: (User) The user
-  Name: 0
+  Name: 1
   """
   gender = ndb.IntegerProperty()  # 0=male, 1=female, 2=other
   sexuality = ndb.IntegerProperty()  # 0=gay, 1=straight, 2=bi, 3=other
@@ -39,7 +57,7 @@ class SearchSettings(ndb.Model):
   """Defines the types of partners a user wants to match with.
 
   Ancestor: (User) The user
-  Name: 0
+  Name: 1
   """
   radius = ndb.FloatProperty()  # In miles
   min_age = ndb.IntegerProperty()  # In years
@@ -60,7 +78,7 @@ class Garden(ndb.Model):
   Doesn't actually hold any info yet; might contain metadata in the future.
 
   Ancestor: (User) The user
-  Name: 0
+  Name: 1
   """
   pass
 
@@ -85,7 +103,7 @@ class Rose(ndb.Model):
   structure of their ancestor path and name.
 
   Ancestor: (User, Garden) The user's garden
-  Name: 0, 1, or 2 (each user has 3 roses)
+  Name: 1, 1, or 2 (each user has 3 roses)
   """
   bloomed = ndb.DateTimeProperty()  # In the future when unbloomed
   planted = ndb.DateTimeProperty()
@@ -166,3 +184,12 @@ class ReceivedMessage(Message):
   Ancestor: (User, Relationship) The recipient and sender, respectively
   """
   pass
+
+
+class MessageFile(ndb.Model):
+  """An audio message.
+
+  Ancestor: (User, Relationship) The sender and recipient, respectively.
+  Name: (int) Send timestamp, in miliseconds since epoch.
+  """
+  blob = ndb.BlobProperty(required=True)
