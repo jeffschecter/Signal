@@ -36,7 +36,7 @@ ROUTES.append(('/message/listen/*', Listen))
 
 class SendInformat(ndb.Model):
   profile = ndb.IntegerProperty(required=True)
-  blob = ioformat.BigBlobProperty(required=True)
+  blob = ioformat.BlobProperty(required=True)
 
 
 class Send(util.AuthedHandler):

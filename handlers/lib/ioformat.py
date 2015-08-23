@@ -3,10 +3,16 @@
 from google.appengine.ext import ndb
 
 
-class BigBlobProperty(ndb.BlobProperty):
+class BlobProperty(ndb.BlobProperty):
+  """Wrapper that performs some additional validation.
+
+  Datastore treats ASCII text strings as interchangeable with binary blobs, but
+  not so for unicode strings. The webapp2 framework treats all incoming requests
+  as unicode, se we need to cerce blobs to ASCII strings before storing them.
+  """
 
   def _validate(self, value):
-    return ""
+    return str(value)
 
 
 class Trivial(ndb.Model):
@@ -14,7 +20,7 @@ class Trivial(ndb.Model):
 
 
 class Blob(ndb.Model):
-  blob = BigBlobProperty(required=True)
+  blob = BlobProperty(required=True)
 
 
 class AudioOutput(ndb.Model):
