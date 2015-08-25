@@ -31,11 +31,13 @@ def TODO():
 
 
 # --------------------------------------------------------------------------- #
-#  Endpoint handler templates.                                                #
+#  Endpoint handler superclasses.                                             #
 # --------------------------------------------------------------------------- #
 
 class RequestHandler(webapp2.RequestHandler):
 
+  # Subclasses should override in_format and out_format with subclasses of
+  # ndb.Model. These models act as the canonical input and output formats.
   in_format = ndb.Expando
   out_format = ndb.Expando
 

@@ -3,6 +3,7 @@
 import api
 import datetime
 import json
+import logging
 import webtest
 
 from google.appengine.datastore import datastore_stub_util
@@ -33,21 +34,23 @@ DEFAULT_TEST_ENV = {
 class TestApi(object):
 
   def __init__(self, **default_env):
-    self.default_env = default_env or DEFAULT_TEST_ENV
+    self.default_env = DEFAULT_TEST_ENV
+    self.default_env.update(default_env)
     self.Start()
 
   def Start(self):
-    ndb.get_context().set_cache_policy(False)
     self.testbed = testbed.Testbed()
     self.testbed.activate()
     self.policy = datastore_stub_util.PseudoRandomHRConsistencyPolicy(
       probability=0)
     self.testbed.init_datastore_v3_stub(consistency_policy=self.policy)
     self.testbed.init_memcache_stub()
+    ndb.get_context().clear_cache()
     self.test_app = webtest.TestApp(api.API)
 
   def Stop(self):
     self.testbed.deactivate()
+    del(self.test_app.app)
 
   def Call(self, endpoint, post=False, expect_err=False, env=None, **kwargs):
     env = env or self.default_env
@@ -92,11 +95,11 @@ SEX_MATH = {
 def FakeUsers(cap=None):
   uid = 0
   now = datetime.datetime.today()
-  for gender in (0, 1, 2):
-    for sexuality in (0, 1, 2, 3):
-      for lat_offset in (-5, 0, 5):
-        for long_offset in (-1, 0, 1):
-          for age_offset in (-10, -5, 0, 5, 10):
+  for age_offset in (0, -10, -5, 5, 10):
+    for long_offset in (0, -5, 5):
+      for lat_offset in (0, -5, 5):
+        for sexuality in (0, 1, 2, 3):
+          for gender in (0, 1, 2):
             uid += 1
             if cap and uid > cap:
               break

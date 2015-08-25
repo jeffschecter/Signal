@@ -1,7 +1,5 @@
 """Tests for handlers.account endpoints."""
 
-import json
-import logging
 import unittest
 import testutils
 
