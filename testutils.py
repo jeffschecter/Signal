@@ -53,23 +53,19 @@ class TestApi(object):
     del(self.test_app.app)
 
   def Call(self, endpoint, post=False, expect_err=False, env=None, **kwargs):
-    env = env or self.default_env
+    req_env = dict(self.default_env)
+    if env:
+      req_env.update(env)
     method = self.test_app.post if post else self.test_app.get
     path = "{endpoint}?data={data}".format(
       endpoint=endpoint,
-      data=json.dumps({"env": env, "args": kwargs}))
-    resp = method(path)
-    if resp.status_int != 200:
-      raise RuntimeError(
-        "Call to endpoint failed! {endpoint} {env} {args}".format(
-          endpoint=endpoint, env=env, args=kwargs))
-    else:
-      resp = json.loads(resp.normal_body)
-      env = resp['env']
-      args = resp['args']
-      if not expect_err:
-        assert not env.get('error'), env['error_report']
-      return env, args
+      data=json.dumps({"env": req_env, "args": kwargs}))
+    resp = json.loads(method(path).normal_body)
+    resp_env = resp['env']
+    resp_args = resp['args']
+    if not expect_err:
+      assert not resp_env.get('error'), resp_env['error_report']
+    return resp_env, resp_args
 
 
 # --------------------------------------------------------------------------- #

@@ -49,8 +49,10 @@ class LoadOutformat(ndb.Model):
   gender_string = ndb.StringProperty()  # If MatchParameters.gender == 2
   sexuality_string = ndb.StringProperty()  # If MatchParameters.sexuality == 3
   joined = ndb.DateTimeProperty()
-  gender = ndb.IntegerProperty()  # 0=male, 1=female, 2=other
-  sexuality = ndb.IntegerProperty()  # 0=gay, 1=straight, 2=bi, 3=other
+  # 0=male, 1=female, 2=other
+  gender = ndb.IntegerProperty(choices=[0, 1, 2])
+  # 0=gay, 1=straight, 2=bi, 3=other
+  sexuality = ndb.IntegerProperty(choices=[0, 1, 2, 3])
   birthday = ndb.DateTimeProperty()
   last_activity = ndb.DateTimeProperty()
   latitude = ndb.FloatProperty()
