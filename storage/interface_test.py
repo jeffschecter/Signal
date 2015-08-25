@@ -2,11 +2,11 @@
 
 import datetime
 import unittest
-import testutils
 
 from google.appengine.ext import ndb
 from storage import interface
 from storage import model
+from test import testutils
 
 
 class UtilitiesTest(unittest.TestCase):
@@ -91,13 +91,28 @@ class UtilitiesTest(unittest.TestCase):
     self.assertEqual(search2.radius, 100)
 
   def testPing(self):
-    raise NotImplementedError()
+    start = datetime.datetime.today()
+    match = interface.Ping(1, 100, 150)
+    stop = datetime.datetime.today()
+    self.assertEqual(100, match.latitude)
+    self.assertEqual(150, match.longitude)
+    self.assertTrue(
+      start <= match.last_activity and match.last_activity <= stop)
+    _, match2, _ = interface.LoadAccount(1)
+    self.assertEqual(100, match2.latitude)
+    self.assertEqual(150, match2.longitude)
+    self.assertTrue(
+      start <= match2.last_activity and match2.last_activity <= stop)
 
   def testSetIntro(self):
-    raise NotImplementedError()
+    interface.SetIntro(1, testutils.Resource("intro.aac"))
+    with self.assertRaises(ValueError):
+      interface.SetIntro(1, testutils.Resource("icon.png"))
 
   def testSetImage(self):
-    raise NotImplementedError()
+    interface.SetImage(1, testutils.Resource("icon.png"))
+    with self.assertRaises(ValueError):
+      interface.SetImage(1, testutils.Resource("intro.aac"))
 
 
 if __name__ == "__main__":

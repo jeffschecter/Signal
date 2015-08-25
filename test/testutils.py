@@ -4,6 +4,7 @@ import api
 import datetime
 import json
 import logging
+import os
 import webtest
 
 from google.appengine.datastore import datastore_stub_util
@@ -24,6 +25,12 @@ DEFAULT_TEST_ENV = {
   "uid": DEFAULT_UID,
   "latitude": DEFAULT_LATITUDE,
   "longitude": DEFAULT_LONGITUDE}
+
+
+def Resource(handle):
+  fname = os.path.join(os.path.dirname(__file__), "resources", handle)
+  with open(fname, "r") as f:
+    return f.read()
 
 
 # --------------------------------------------------------------------------- #
@@ -50,7 +57,6 @@ class TestApi(object):
 
   def Stop(self):
     self.testbed.deactivate()
-    del(self.test_app.app)
 
   def Call(self, endpoint, post=False, expect_err=False, env=None, **kwargs):
     req_env = dict(self.default_env)

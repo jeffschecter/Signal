@@ -227,6 +227,5 @@ class Ping(util.AuthedHandler):
       self.GetEnv("longitude"))
     self.SetArg("latitude", match.latitude)
     self.SetArg("longitude", match.longitude)
-    util.TODO()  # country, region, city
 
 ROUTES.append(('/account/ping/*', Ping))

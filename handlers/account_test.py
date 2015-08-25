@@ -1,10 +1,10 @@
 """Tests for handlers.account endpoints."""
 
 import unittest
-import testutils
 
 from storage import interface
 from storage import model
+from test import testutils
 
 
 class AccountHandlerTest(unittest.TestCase):
@@ -35,10 +35,10 @@ class AccountHandlerTest(unittest.TestCase):
     self.assertEqual(args["uid"], testutils.DEFAULT_UID)
 
   def testSetIntro(self):
-    self.api.Call("/account/set_intro", blob="")
+    self.api.Call("/account/set_intro", blob=testutils.Resource("intro.aac"))
 
   def testSetImage(self):
-    self.api.Call("/account/set_image", blob="")
+    self.api.Call("/account/set_image", blob=testutils.Resource("image.png"))
 
   def testBio(self):
     env, _ = self.api.Call(
@@ -103,6 +103,12 @@ class AccountHandlerTest(unittest.TestCase):
 
   def testPing(self):
     self.api.Call("/account/ping")
+    env, _ = self.api.Call(
+      "/account/ping", expect_err=True, env={"latitude": 200})
+    self.assertEqual(
+      env["error_report"],
+      ("AssertionError: "
+       "Latitude and Longitude must be between -180 and 180."))
 
 
 if __name__ == "__main__":

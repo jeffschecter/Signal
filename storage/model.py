@@ -4,6 +4,13 @@ from google.appengine.ext import ndb
 from google.appengine.ext.ndb import polymodel
 
 
+class GeoCoordProperty(ndb.FloatProperty):
+
+  def _validate(self, value):
+    msg = "Latitude and Longitude must be between -180 and 180."
+    assert value >= -180.0 and value <= 180.0, msg
+
+
 # --------------------------------------------------------------------------- #
 # Users are the root of the object tree.                                      #
 # --------------------------------------------------------------------------- #
@@ -50,8 +57,8 @@ class MatchParameters(ndb.Model):
   sexuality = ndb.IntegerProperty(choices=[0, 1, 2, 3])
   birthday = ndb.DateTimeProperty()
   last_activity = ndb.DateTimeProperty()
-  latitude = ndb.FloatProperty()
-  longitude = ndb.FloatProperty()
+  latitude = GeoCoordProperty()
+  longitude = GeoCoordProperty()
   active = ndb.BooleanProperty(default=True)
 
 
