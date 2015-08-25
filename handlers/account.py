@@ -97,14 +97,10 @@ ROUTES.append(('/account/set_intro/*', SetIntro))
 # Set your chat image.                                                         #
 # --------------------------------------------------------------------------- #
 
-class SetImageOutformat(ndb.Model):
-  pass
-
-
 class SetImage(util.AuthedHandler):
 
   in_format = ioformat.Blob
-  out_format = SetImageOutformat
+  out_format = ioformat.Trivial
 
   def Handle(self):
     interface.SetImage(self.GetEnv("uid"), self.GetArg("blob"))
