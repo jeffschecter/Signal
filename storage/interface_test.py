@@ -16,7 +16,7 @@ class InterfaceTest(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
     cls.api = testutils.TestApi()
-    testutils.FakeUsers(1)
+    testutils.FakeUsers(2)
 
   @classmethod
   def tearDownClass(cls):
@@ -43,6 +43,9 @@ class InterfaceTest(unittest.TestCase):
         model.MatchParameters.get_by_id(1, parent=ndb.Key(model.User, 1)))
     with self.assertRaises(LookupError):
       interface.GetForUid(model.MatchParameters, 12345)
+
+  def testRelationship(self):
+    raise NotImplementedError
 
   def testLoadAccount(self):
     user, _, _ = interface.LoadAccount(1)
@@ -125,6 +128,10 @@ class InterfaceTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       interface.SetImage(1, testutils.Resource("intro.aac"))
 
+  def testSendMessage(self):
+    now = datetime.datetime.today()
+    interface.SendMessage(1, 2, testutils.Resource("intro.aac"), now=now)
+    #TODO
 
 if __name__ == "__main__":
   unittest.main()

@@ -143,7 +143,6 @@ class FullRelationship(Relationship):
   """A relationship where users have exchange communications."""
   blocked = ndb.BooleanProperty()
   saved = ndb.BooleanProperty()
-  can_see_icon = ndb.BooleanProperty()
   new_roses = ndb.IntegerProperty()
   new_messages = ndb.IntegerProperty()
   last_sent_rose = ndb.DateTimeProperty()
@@ -178,6 +177,7 @@ class Message(ndb.Model):
 
   Name: (int) Send timestamp, in miliseconds since epoch
   """
+  new = ndb.BooleanProperty(required=True, default=True)
   length_miliseconds = ndb.IntegerProperty()
   retrieved = ndb.DateTimeProperty(repeated=True)
 

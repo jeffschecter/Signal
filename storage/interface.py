@@ -10,6 +10,22 @@ from storage import model
 # Some utilities.                                                             #
 # --------------------------------------------------------------------------- #
 
+
+EPOCH = datetime.datetime.utcfromtimestamp(0)
+
+
+def Milis(dt):
+  """Converts a datetime to miliseconds since epoch.
+
+  Args:
+    dt: (datetime.datetime) The datetime to convert.
+
+  Returns:
+    (int) Miliseconds since epoch.
+  """
+  return int((dt - EPOCH).total_seconds() * 1000)
+
+
 def Guarantee(obj):
   """Complains if the input is None, else passes it straight through.
 
@@ -55,7 +71,7 @@ def GetForUid(model_class, uid):
   """Retrieves a model.* for a given user id from the datastore.
 
   This only works for model classes that are in a 1-to-1 relationship with the
-  user, like the Garden; it doesn't work for say Relatioship or Rose.
+  user, like the Garden; it doesn't work for say Relationship or Rose.
 
   Args:
     model_class: (class) A subclass of ndb.Model.
@@ -65,6 +81,29 @@ def GetForUid(model_class, uid):
     (model_class) The retrieved model.
   """
   return Guarantee(model_class.get_by_id(1, parent=UKey(uid)))
+
+
+def Relationship(agent, patient, full=True):
+  """Retrieves or creates a relationship for two users.
+  
+  Note: If the relationship doesn't exist yet, nothing is written to the db by
+  this function.
+
+  Args:
+    agent: (int) The user object id of the actor or sender.
+    patient: (int) The user object id of the patient or recipient.
+    full: (boolean) True to access the full relationship.
+
+  Returns:
+    (model.Relationship or model.FullRelationship) The relationship.
+  """
+  cls = model.FullRelationship if full else model.Relationship
+  obj = cls(id=patient, parent=UKey(agent))
+  retrieved = obj.key.get()
+  if retrieved is not None:
+    return retrieved
+  else:
+    return obj
 
 
 # --------------------------------------------------------------------------- #
@@ -95,7 +134,7 @@ def CreateAccount(name, latitude, longitude, now=None):
     name: (str) The user's nickname.
     latitude: (float) Degress latitude.
     longitude: (float) Degress longitude.
-    now: (datetime.datetime) To peg "now" to. For testing.
+    now: (datetime.datetime) To peg current time; for testing.
 
   Returns:
     (model.User, model.MatchParameters, model.SearchSettings) For the newly
@@ -119,7 +158,7 @@ def UpdateAccount(uid, **kwargs):
 
   Args:
     uid: (int) The user's object id.
-    **kwargs: (dict) Mapping properties to be updated to values.
+    kwargs: (dict) Mapping properties to be updated to values.
 
   Returns:
     (model.User, model.MatchParameters, model.SearchSettings) The newly
@@ -227,3 +266,39 @@ def GetImage(uid):
     (str) Raw png file bytestring
   """
   return GetForUid(model.ImageFile, uid).blob
+
+
+# --------------------------------------------------------------------------- #
+# Working with relationships.                                                 #
+# --------------------------------------------------------------------------- #
+
+# pylint: disable=no-value-for-parameter
+@ndb.transactional(xg=True)
+def SendMessage(sender, recipient, blob, now=None):
+  """Sends a message from one user to another.
+
+  Args:
+    sender: (int) The user object id of the sender.
+    recipient: (int) The user object id of the recipient.
+    blob: (str) Raw AAC file bytestring.
+    now: (datetime.datetime) To peg current time; for testing.
+  """
+  now = now or datetime.datetime.today()
+  ts = Milis(now)
+  sender_rel = Relationship(sender, recipient, full=True)
+  recipient_rel = Relationship(recipient, sender, full=True)
+
+  # Save the actual audio
+  model.MessageFile(id=ts, parent=sender_rel.key, blob=blob).put()
+
+  # Save a trace in both the sender ad recipient's relationship
+  model.SentMessage(id=ts, parent=sender_rel.key).put()
+  model.ReceivedMessage(id=ts, parent=recipient_rel.key).put()
+
+  # Update the last sent and last received message fields in the relationships
+  sender_rel.last_sent_message = now
+  sender_rel.put()
+  recipient_rel.last_received_message = now
+  recipient_rel.put()
+
+
