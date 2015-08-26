@@ -10,12 +10,12 @@ from handlers import profile
 
 
 HANDLER_MODULES = (
-  account,
-  garden,
-  history,
-  message,
-  profile,
-  )
+    account,
+    garden,
+    history,
+    message,
+    profile,
+    )
 
 
 ROUTES = []
