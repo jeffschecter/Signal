@@ -14,21 +14,48 @@ from handlers.lib import ioformat
 # --------------------------------------------------------------------------- #
 
 class VerificationError(Exception):
+  """Raised when endpoint inputs or outputs are invalid."""
   pass
 
 
 def JsonEncoder(obj):
+  """Handles encoding to JSON of objects that python usually wigs out on.
+
+  Args:
+    obj: (*) The object to encode.
+
+  Returns:
+    (string) A serialized version of the object.
+  """
   # For date, time, and datetime, convert to isoformat string
   if hasattr(obj, 'isoformat'):
     return obj.isoformat()
   else:
     raise TypeError(
-      "Object of type {t} with value of {v} is not JSON serializable".format(
-        t=type(obj),
-        v=repr(obj)))
+        "Object of type {t} with value of {v} is not JSON serializable".format(
+            t=type(obj), v=repr(obj)))
+
+
+def Decode(b64):
+  """Decodes base64 strings.
+
+  We use a url-safe encoding that utilizes "-" and "_" instead of the default
+  "+" and "/" characters, and handle any padding issues without raising errors.
+
+  Args:
+    b64: (str) The encoded string.
+
+  Returns:
+    (str) The decoded string.
+  """
+  missing_padding = 4 - len(b64) % 4
+  if missing_padding:
+    b64 += b'='* missing_padding
+  return base64.b64decode(str(b64), "-_")
 
 
 def TODO():
+  """Raises a NotImplementedError."""
   raise NotImplementedError("This endpoint has not been implemented.")
 
 
@@ -37,73 +64,127 @@ def TODO():
 # --------------------------------------------------------------------------- #
 
 class RequestHandler(webapp2.RequestHandler):
+  """Generic request handler. Intended for subclassing."""
 
   # Subclasses should override in_format and out_format with subclasses of
   # ndb.Model. These models act as the canonical input and output formats.
   in_format = ndb.Expando
   out_format = ndb.Expando
 
+  def __init__(self, *args, **kwargs):
+    self.env = {}
+    self.args = {}
+    self.response_args = {}
+    self.response_env = {}
+    self.file = None
+    webapp2.RequestHandler.__init__(self, *args, **kwargs)
+
+  # pylint: disable=invalid-name
   def get(self):
+    """Forward GET requests to the response processor."""
     self.Respond()
 
+  # pylint: disable=invalid-name
   def post(self):
+    """Forward POST requests to the response processor."""
     self.Respond()
 
   def SetArg(self, k, v):
+    """Sets an otput argument.
+
+    Args:
+      k: (str) The name of the argument.
+      v: (*) Its value. Must be JSON serializable.
+    """
     self.response_args[k] = v
 
   def UpdateArgs(self, *models, **kwargs):
+    """Set several output arguments at once.
+
+    Args:
+      models: (ndb.Model) Copy properties into the output arguments.
+      kwargs: (dict) Multiple named arguments.
+    """
     for model in models:
-      d = model if type(model) == dict else model.to_dict()
+      d = model if isinstance(model, dict) else model.to_dict()
       for k, v in d.iteritems():
         if v not in ([], None):
           self.SetArg(k, v)
     self.response_args.update(kwargs)
 
   def GetArg(self, x):
+    """Get the value of an input argument.
+
+    Args:
+      x: (str) The name of the argument to retrieve.
+
+    Returns:
+      (*) The argument's value, or None if absent.
+    """
     return self.args.get(x)
 
   def SetEnv(self, k, v):
+    """Set an output environmental variable.
+
+    Args:
+      k: (str) The name of the variable.
+      v: (*) Its value. Must be JSON serializable.
+    """
     self.response_env[k] = v
 
   def GetEnv(self, x):
+    """Get the value of an input environmental variable.
+
+    Args:
+      x: (str) The name of the variable to retrieve.
+
+    Returns:
+      (*) The variable's value, or None if absent.
+    """
     return self.env.get(x)
 
+  # pylint: disable=protected-access
   def VerifyIn(self):
+    """Validate the endpoint call."""
     try:
       self.in_format(**self.args)._check_initialized()
       self._VerifyIn()
     except Exception as e:
       raise VerificationError(
-        "While checking input: {t}: {s}".format(t=type(e).__name__, s=str(e)))
+          "While checking input: {t}: {s}".format(
+              t=type(e).__name__, s=str(e)))
 
   def _VerifyIn(self):
     """Subclasses should override _VerifyIn to perform any additional checks
     required to validate the request."""
     pass
 
+  # pylint: disable=protected-access
   def VerifyOut(self):
+    """Validate the response."""
     try:
       self.out_format(**self.response_args)._check_initialized()
       self._VerifyOut()
     except Exception as e:
       raise VerificationError(
-        "While checking output: {t}: {s}".format(t=type(e).__name__, s=str(e)))
+          "While checking output: {t}: {s}".format(
+              t=type(e).__name__, s=str(e)))
 
   def _VerifyOut(self):
     """Subclasses should override _VerifyOut to perform any additional checks
     required to validate the response."""
     pass
 
-  def Output(self, **kwargs):
+  def Output(self):
+    """Serialize the response arguments and variables."""
     return json.dumps(
-      {"env": self.response_env, "args": kwargs or self.response_args},
-      default=JsonEncoder)
+        {"env": self.response_env, "args": self.response_args},
+        default=JsonEncoder)
 
+  # pylint: disable=broad-except
   def Respond(self):
+    """Process the request and write a response."""
     self.response.headers['Content-Type'] = 'text/json'
-    self.response_args = {}
-    self.response_env = {}
     try:
       query = json.loads(self.request.params.get('data'))
       self.env = query.get("env", {})
@@ -112,13 +193,11 @@ class RequestHandler(webapp2.RequestHandler):
       self.Handle()
       self.VerifyOut()
     except Exception as e:
-      if not self.__dict__.get("env"):
-        import pdb; pdb.set_trace()
       logging.exception(e)
       self.SetEnv("error", True)
       if self.GetEnv("debug"):
         self.SetEnv(
-          "error_report", "{t}: {s}".format(t=type(e).__name__, s=str(e)))
+            "error_report", "{t}: {s}".format(t=type(e).__name__, s=str(e)))
       else:
         self.SetEnv("error_report", "Something went wrong.")
     finally:
@@ -129,9 +208,10 @@ class AuthedHandler(RequestHandler):
   """Accepts requests for endpoints that require a user to be logged in."""
 
   def _VerifyIn(self):
+    """Check whether we have a real signed-in user."""
     #TODO Actually authenticate
     if not self.GetEnv("uid"):
-      raise AuthenticationError("Auth failed: {env}".format(env=self.env))
+      raise VerificationError("Auth failed: {env}".format(env=self.env))
 
 
 class FileAcceptingAuthedHandler(AuthedHandler):
@@ -142,12 +222,7 @@ class FileAcceptingAuthedHandler(AuthedHandler):
   in_format = ioformat.Blob
   out_format = ioformat.Trivial
 
-  def decode(self, b64):
-    missing_padding = 4 - len(b64) % 4
-    if missing_padding:
-        b64 += b'='* missing_padding
-    return base64.b64decode(str(b64), "-_")
-
   def _VerifyIn(self):
+    """Check that the caller sent a file."""
     AuthedHandler._VerifyIn(self)
-    self.file = self.decode(self.GetArg("blob"))
+    self.file = Decode(self.GetArg("blob"))

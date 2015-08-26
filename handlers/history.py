@@ -1,3 +1,5 @@
+# pylint: disable=missing-docstring
+
 """Endpoints for working with a user's history."""
 
 from google.appengine.ext import ndb
@@ -17,7 +19,7 @@ ROUTES = []
 class LoadOutformat(ndb.Model):
   pass
 
- 
+
 class Load(util.AuthedHandler):
 
   in_format = ioformat.Trivial

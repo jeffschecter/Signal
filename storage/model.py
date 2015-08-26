@@ -6,7 +6,9 @@ from google.appengine.ext.ndb import polymodel
 
 class GeoCoordProperty(ndb.FloatProperty):
 
+  # pylint: disable=no-self-use
   def _validate(self, value):
+    """Validates latitude and longitude."""
     msg = "Latitude and Longitude must be between -180 and 180."
     assert value >= -180.0 and value <= 180.0, msg
 

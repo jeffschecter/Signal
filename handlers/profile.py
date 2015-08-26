@@ -1,3 +1,5 @@
+# pylint: disable=missing-docstring
+
 """Endpoints for working with profile browsing."""
 
 from google.appengine.ext import ndb

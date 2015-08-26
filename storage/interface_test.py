@@ -1,3 +1,5 @@
+# pylint: disable=missing-docstring
+
 """Tests for the datastore interface."""
 
 import datetime
@@ -21,7 +23,6 @@ class InterfaceTest(unittest.TestCase):
     cls.api.Stop()
 
   def testGuarantee(self):
-    return
     with self.assertRaises(LookupError):
       interface.Guarantee(None)
     with self.assertRaises(LookupError):
@@ -38,13 +39,13 @@ class InterfaceTest(unittest.TestCase):
 
   def testGetForUid(self):
     self.assertEqual(
-      interface.GetForUid(model.MatchParameters, 1),
-      model.MatchParameters.get_by_id(1, parent=ndb.Key(model.User, 1)))
+        interface.GetForUid(model.MatchParameters, 1),
+        model.MatchParameters.get_by_id(1, parent=ndb.Key(model.User, 1)))
     with self.assertRaises(LookupError):
       interface.GetForUid(model.MatchParameters, 12345)
 
   def testLoadAccount(self):
-    user, match, search = interface.LoadAccount(1)
+    user, _, _ = interface.LoadAccount(1)
     self.assertTrue(user.key.id(), 1)
     with self.assertRaises(LookupError):
       interface.LoadAccount(12345)
@@ -65,8 +66,8 @@ class InterfaceTest(unittest.TestCase):
     self.assertEqual(search, search2)
 
   def testUpdateAccount(self):
-    u, _, _ = interface.CreateAccount("Foo", 0, 0, datetime.datetime.today())
-    uid = u.key.id()
+    user, _, _ = interface.CreateAccount("Foo", 0, 0, datetime.datetime.today())
+    uid = user.key.id()
     with self.assertRaises(ValueError):
       interface.UpdateAccount(uid, joined=datetime.datetime.today())
     with self.assertRaises(ValueError):
@@ -78,10 +79,10 @@ class InterfaceTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       interface.UpdateAccount(uid, foobarbaz=123)
     user, match, search = interface.UpdateAccount(
-      uid,
-      gender_string="genderqueer",
-      gender=2,
-      radius=100)
+        uid,
+        gender_string="genderqueer",
+        gender=2,
+        radius=100)
     self.assertEqual(user.gender_string, "genderqueer")
     self.assertEqual(match.gender, 2)
     self.assertEqual(search.radius, 100)
@@ -97,12 +98,12 @@ class InterfaceTest(unittest.TestCase):
     self.assertEqual(100, match.latitude)
     self.assertEqual(150, match.longitude)
     self.assertTrue(
-      start <= match.last_activity and match.last_activity <= stop)
+        start <= match.last_activity and match.last_activity <= stop)
     _, match2, _ = interface.LoadAccount(1)
     self.assertEqual(100, match2.latitude)
     self.assertEqual(150, match2.longitude)
     self.assertTrue(
-      start <= match2.last_activity and match2.last_activity <= stop)
+        start <= match2.last_activity and match2.last_activity <= stop)
 
   def testGetSetIntro(self):
     in_blob = testutils.Resource("intro.aac")

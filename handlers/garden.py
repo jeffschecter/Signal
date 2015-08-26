@@ -1,3 +1,5 @@
+# pylint: disable=missing-docstring
+
 """Endpoints for working with a user's garden."""
 
 from google.appengine.ext import ndb

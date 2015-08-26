@@ -55,8 +55,8 @@ def CreateAccount(name, latitude, longitude, now=None):
   user = model.User(name=name, joined=now)
   user.put()
   match = model.MatchParameters(
-    id=1, parent=user.key, last_activity=now,
-    latitude=latitude, longitude=longitude)
+      id=1, parent=user.key, last_activity=now,
+      latitude=latitude, longitude=longitude)
   match.put()
   search = model.SearchSettings(id=1, parent=user.key)
   search.put()
@@ -75,12 +75,13 @@ def UpdateAccount(uid, **kwargs):
     (model.User, model.MatchParameters, model.SearchSettings) The newly
     updated objects.
   """
+  # pylint: disable=protected-access
   # Load the needed objects
   user, match, search = None, None, None
   for argname, val in kwargs.iteritems():
     if argname in ("joined", "last_activity", "latitude", "longitude"):
       raise ValueError(
-        "You can't set {a} in UpdateAccount.".format(a=argname))
+          "You can't set {a} in UpdateAccount.".format(a=argname))
     elif argname in model.User._properties:
       if not user:
         user = GetUser(uid)
@@ -95,8 +96,8 @@ def UpdateAccount(uid, **kwargs):
       setattr(search, argname, val)
     else:
       raise ValueError(
-        "'{a}' not found in User, MatchParameters, or SearchSettings".format(
-          a=argname))
+          "'{a}' not found in User, MatchParameters, or SearchSettings".format(
+              a=argname))
 
   # Send updates to the db.
   for entity in (user, match, search):

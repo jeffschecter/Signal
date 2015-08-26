@@ -1,3 +1,5 @@
+# pylint: disable=missing-docstring
+
 """Endpoints for working with a user's account."""
 
 from google.appengine.ext import ndb
@@ -5,7 +7,6 @@ from handlers.lib import ioformat
 from handlers.lib import util
 from storage import interface
 from storage import model
-
 
 ROUTES = []
 
@@ -30,10 +31,10 @@ class Create(util.RequestHandler):
   def Handle(self):
     #TODO figure out fb accoutn linking etc
     util.TODO()
-    user, unused_match, unused_search = interface.CreateAccount(
-      self.GetArg("name"),
-      self.GetEnv("latitude"),
-      self.GetEnv("longitude"))
+    user, _, _ = interface.CreateAccount(
+        self.GetArg("name"),
+        self.GetEnv("latitude"),
+        self.GetEnv("longitude"))
     self.UpdateArgs(uid=user.key.id())
 
 ROUTES.append(('/account/create/*', Create))
@@ -158,9 +159,7 @@ class Deactivate(util.AuthedHandler):
   out_format = ioformat.Trivial
 
   def Handle(self):
-    interface.UpdateAccount(
-      self.GetEnv("uid"),
-      active=False)
+    interface.UpdateAccount(self.GetEnv("uid"), active=False)
 
 ROUTES.append(('/account/deactivate/*', Deactivate))
 
@@ -175,9 +174,7 @@ class Reactivate(util.AuthedHandler):
   out_format = ioformat.Trivial
 
   def Handle(self):
-    interface.UpdateAccount(
-      self.GetEnv("uid"),
-      active=True)
+    interface.UpdateAccount(self.GetEnv("uid"), active=True)
 
 ROUTES.append(('/account/reactivate/*', Reactivate))
 
@@ -216,9 +213,9 @@ class Ping(util.AuthedHandler):
 
   def Handle(self):
     match = interface.Ping(
-      self.GetEnv("uid"),
-      self.GetEnv("latitude"),
-      self.GetEnv("longitude"))
+        self.GetEnv("uid"),
+        self.GetEnv("latitude"),
+        self.GetEnv("longitude"))
     self.SetArg("latitude", match.latitude)
     self.SetArg("longitude", match.longitude)
 

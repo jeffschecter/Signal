@@ -1,3 +1,5 @@
+# pylint: disable=missing-docstring
+
 """Tests for handlers.account endpoints."""
 
 import base64
@@ -21,12 +23,12 @@ class AccountHandlerTest(unittest.TestCase):
 
   def testCreate(self):
     _, args = self.api.Call(
-      "/account/create",
-      env={"latitude": testutils.DEFAULT_TEST_ENV["latitude"],
-           "longitude": testutils.DEFAULT_TEST_ENV["longitude"]},
-      name="Johnny")
+        "/account/create",
+        env={"latitude": testutils.DEFAULT_TEST_ENV["latitude"],
+             "longitude": testutils.DEFAULT_TEST_ENV["longitude"]},
+        name="Johnny")
     uid = args["uid"]
-    user, match, search = interface.LoadAccount(uid)
+    user, match, _ = interface.LoadAccount(uid)
     self.assertEqual(user.name, "Johnny")
     self.assertEqual(match.latitude, testutils.DEFAULT_LATITUDE)
     self.assertEqual(match.longitude, testutils.DEFAULT_LONGITUDE)
@@ -49,29 +51,29 @@ class AccountHandlerTest(unittest.TestCase):
 
   def testBio(self):
     env, _ = self.api.Call(
-      "/account/bio", expect_err=True, gender=0, gender_string="genderqueer")
+        "/account/bio", expect_err=True, gender=0, gender_string="genderqueer")
     self.assertEqual(
-      env["error_report"],
-      ("VerificationError: While checking input: ValueError: "
-       "Only set a gender string if gender == 2."))
+        env["error_report"],
+        ("VerificationError: While checking input: ValueError: "
+         "Only set a gender string if gender == 2."))
     env, _ = self.api.Call(
-      "/account/bio", expect_err=True, sexuality=0, sexuality_string="queer")
+        "/account/bio", expect_err=True, sexuality=0, sexuality_string="queer")
     self.assertEqual(
-      env["error_report"],
-      ("VerificationError: While checking input: ValueError: "
-       "Only set a sexuality string if sexuality == 3."))
+        env["error_report"],
+        ("VerificationError: While checking input: ValueError: "
+         "Only set a sexuality string if sexuality == 3."))
     env, _ = self.api.Call("/account/bio", expect_err=True)
     self.assertEqual(
-      env["error_report"],
-      ("VerificationError: While checking input: ValueError: "
-       "Must specify gender or sexuality."))
+        env["error_report"],
+        ("VerificationError: While checking input: ValueError: "
+         "Must specify gender or sexuality."))
     self.api.Call("/account/bio", gender=0, sexuality=1)
     self.api.Call("/account/bio", gender=0)
     self.api.Call("/account/bio", sexuality=1)
     self.api.Call(
-      "/account/bio",
-      gender=2, gender_string="genderqueer",
-      sexuality=3, sexuality_string="queer")
+        "/account/bio",
+        gender=2, gender_string="genderqueer",
+        sexuality=3, sexuality_string="queer")
     user, match, _ = interface.LoadAccount(testutils.DEFAULT_UID)
     self.assertEqual(user.gender_string, "genderqueer")
     self.assertEqual(user.sexuality_string, "queer")
@@ -80,13 +82,13 @@ class AccountHandlerTest(unittest.TestCase):
 
   def testPreferences(self):
     self.api.Call(
-      "/account/preferences",
-      radius=testutils.DEFAULT_RADIUS * 2,
-      min_age=testutils.DEFAULT_AGE + 5,
-      max_age=testutils.DEFAULT_AGE + 10,
-      accept_male_sexualities=[0, 1, 2, 3],
-      accept_female_sexualities=[],
-      accept_other_sexualities=[])
+        "/account/preferences",
+        radius=testutils.DEFAULT_RADIUS * 2,
+        min_age=testutils.DEFAULT_AGE + 5,
+        max_age=testutils.DEFAULT_AGE + 10,
+        accept_male_sexualities=[0, 1, 2, 3],
+        accept_female_sexualities=[],
+        accept_other_sexualities=[])
     _, _, search = interface.LoadAccount(testutils.DEFAULT_UID)
     self.assertEqual(search.radius, testutils.DEFAULT_RADIUS * 2)
     self.assertEqual(search.min_age, testutils.DEFAULT_AGE + 5)
@@ -98,10 +100,10 @@ class AccountHandlerTest(unittest.TestCase):
   def testDeactivateReactivate(self):
     _, match, _ = interface.LoadAccount(testutils.DEFAULT_UID)
     self.assertEqual(match.active, True)
-    env, args = self.api.Call("/account/deactivate")
+    self.api.Call("/account/deactivate")
     _, match, _ = interface.LoadAccount(testutils.DEFAULT_UID)
     self.assertEqual(match.active, False)
-    env, args = self.api.Call("/account/reactivate")
+    self.api.Call("/account/reactivate")
     _, match, _ = interface.LoadAccount(testutils.DEFAULT_UID)
     self.assertEqual(match.active, True)
 
@@ -111,11 +113,11 @@ class AccountHandlerTest(unittest.TestCase):
   def testPing(self):
     self.api.Call("/account/ping")
     env, _ = self.api.Call(
-      "/account/ping", expect_err=True, env={"latitude": 200})
+        "/account/ping", expect_err=True, env={"latitude": 200})
     self.assertEqual(
-      env["error_report"],
-      ("AssertionError: "
-       "Latitude and Longitude must be between -180 and 180."))
+        env["error_report"],
+        ("AssertionError: "
+         "Latitude and Longitude must be between -180 and 180."))
 
 
 if __name__ == "__main__":
