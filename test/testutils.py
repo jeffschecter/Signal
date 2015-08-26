@@ -57,8 +57,22 @@ class TestApi(object):
 
   def Stop(self):
     self.testbed.deactivate()
+    del(self.test_app.app)
 
   def Call(self, endpoint, post=False, expect_err=False, env=None, **kwargs):
+    """Mocks a call to the server.
+
+    Args:
+      endpoint: (str) The route of the target endpoint.
+      post: (boolean) True for a POST request, defaults to GET.
+      expect_err: (boolean) Unless true, raise an error if the response
+        environment has the 'error' or 'error_report' fields set.
+      env: (dict) Overrides to the default request environment.
+      kwargs: (dict) Request args.
+
+    Returns:
+      (dict, dict) The response environment and arguments.
+    """
     req_env = dict(self.default_env)
     if env:
       req_env.update(env)
@@ -67,10 +81,10 @@ class TestApi(object):
       endpoint=endpoint,
       data=json.dumps({"env": req_env, "args": kwargs}))
     resp = json.loads(method(path).normal_body)
-    resp_env = resp['env']
-    resp_args = resp['args']
+    resp_env = resp.get('env')
+    resp_args = resp.get('args')
     if not expect_err:
-      assert not resp_env.get('error'), resp_env['error_report']
+      assert not resp_env.get('error'), resp_env.get('error_report')
     return resp_env, resp_args
 
 

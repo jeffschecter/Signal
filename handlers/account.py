@@ -82,13 +82,10 @@ ROUTES.append(('/account/load/*', Load))
 # Upload your audio introduction.                                             #
 # --------------------------------------------------------------------------- #
 
-class SetIntro(util.AuthedHandler):
-
-  in_format = ioformat.Blob
-  out_format = ioformat.Trivial
+class SetIntro(util.FileAcceptingAuthedHandler):
 
   def Handle(self):
-    interface.SetIntro(self.GetEnv("uid"), self.GetArg("blob"))
+    interface.SetIntro(self.GetEnv("uid"), self.file)
 
 ROUTES.append(('/account/set_intro/*', SetIntro))
 
@@ -97,13 +94,10 @@ ROUTES.append(('/account/set_intro/*', SetIntro))
 # Set your chat image.                                                         #
 # --------------------------------------------------------------------------- #
 
-class SetImage(util.AuthedHandler):
-
-  in_format = ioformat.Blob
-  out_format = ioformat.Trivial
+class SetImage(util.FileAcceptingAuthedHandler):
 
   def Handle(self):
-    interface.SetImage(self.GetEnv("uid"), self.GetArg("blob"))
+    interface.SetImage(self.GetEnv("uid"), self.file)
 
 ROUTES.append(('/account/set_image/*', SetImage))
 

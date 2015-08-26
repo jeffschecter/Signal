@@ -139,6 +139,19 @@ def SetIntro(uid, blob):
   intro = model.IntroFile(id=1, parent=user_key, blob=blob)
   intro.put()
 
+
+def GetIntro(uid):
+  """Gets a user's audio intro.
+
+  Args:
+    uid: (int) The user's object id.
+
+  Returns:
+    (str) Raw AAC file bytestring
+  """
+  return GetForUid(model.IntroFile, uid).blob
+
+
 def SetImage(uid, blob):
   """Sets a user's chat image.
 
@@ -151,3 +164,15 @@ def SetImage(uid, blob):
   user_key = UKey(uid)
   image = model.ImageFile(id=1, parent=user_key, blob=blob)
   image.put()
+
+
+def GetImage(uid):
+  """Gets a user's chat image.
+
+  Args:
+    uid: (int) The user's object id.
+
+  Returns:
+    (str) Raw png file bytestring
+  """
+  return GetForUid(model.ImageFile, uid).blob

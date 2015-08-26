@@ -1,10 +1,12 @@
 """Utilities for defining endpoints."""
 
+import base64
 import json
 import logging
 import webapp2
 
 from google.appengine.ext import ndb
+from handlers.lib import ioformat
 
 
 # --------------------------------------------------------------------------- #
@@ -110,6 +112,8 @@ class RequestHandler(webapp2.RequestHandler):
       self.Handle()
       self.VerifyOut()
     except Exception as e:
+      if not self.__dict__.get("env"):
+        import pdb; pdb.set_trace()
       logging.exception(e)
       self.SetEnv("error", True)
       if self.GetEnv("debug"):
@@ -123,7 +127,23 @@ class RequestHandler(webapp2.RequestHandler):
 
 class AuthedHandler(RequestHandler):
 
-  def _Verify(self):
+  def _VerifyIn(self):
     #TODO Actually authenticate
     if not self.GetEnv("uid"):
       raise AuthenticationError("Auth failed: {env}".format(env=self.env))
+
+
+class FileAcceptingAuthedHandler(AuthedHandler):
+
+  in_format = ioformat.Blob
+  out_format = ioformat.Trivial
+
+  def decode(self, b64):
+    missing_padding = 4 - len(b64) % 4
+    if missing_padding:
+        b64 += b'='* missing_padding
+    return base64.b64decode(str(b64), "-_")
+
+  def _VerifyIn(self):
+    AuthedHandler._VerifyIn(self)
+    self.file = self.decode(self.GetArg("blob"))

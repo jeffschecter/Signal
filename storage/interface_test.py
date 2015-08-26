@@ -104,13 +104,23 @@ class UtilitiesTest(unittest.TestCase):
     self.assertTrue(
       start <= match2.last_activity and match2.last_activity <= stop)
 
-  def testSetIntro(self):
-    interface.SetIntro(1, testutils.Resource("intro.aac"))
+  def testGetSetIntro(self):
+    in_blob = testutils.Resource("intro.aac")
+    interface.SetIntro(1, in_blob)
+    out_blob = interface.GetIntro(1)
+    self.assertEqual(in_blob, out_blob)
+    with self.assertRaises(ValueError):
+      interface.SetIntro(1, testutils.Resource("intro_toolong.aac"))
     with self.assertRaises(ValueError):
       interface.SetIntro(1, testutils.Resource("icon.png"))
 
-  def testSetImage(self):
-    interface.SetImage(1, testutils.Resource("icon.png"))
+  def testGetSetImage(self):
+    in_blob = testutils.Resource("icon.png")
+    interface.SetImage(1, in_blob)
+    out_blob = interface.GetImage(1)
+    self.assertEqual(in_blob, out_blob)
+    with self.assertRaises(ValueError):
+      interface.SetImage(1, testutils.Resource("icon_toobig.png"))
     with self.assertRaises(ValueError):
       interface.SetImage(1, testutils.Resource("intro.aac"))
 
