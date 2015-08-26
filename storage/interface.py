@@ -11,20 +11,59 @@ from storage import model
 # --------------------------------------------------------------------------- #
 
 def Guarantee(obj):
+  """Complains if the input is None, else passes it straight through.
+
+  Args:
+    obj: (*) The object to check.
+
+  Returns:
+    The object.
+
+  Raises:
+    (LookupError) If the object is None.
+  """
   if obj is None:
     raise LookupError("Expected to retrieve datastore object but got None")
   return obj
 
 
 def UKey(uid):
+  """Returns the key for a model.User object with the given user id.
+
+  Args:
+    uid: (int) The user's object id.
+
+  Returns:
+    (ndb.Key) The user key.
+  """
   return ndb.Key(model.User, uid)
 
 
 def GetUser(uid):
+  """Retrieves the model.User object for a given user id from the datastore.
+
+  Args:
+    uid: (int) The user's object id.
+
+  Returns:
+    (model.User) The user object.
+  """
   return Guarantee(model.User.get_by_id(uid))
 
 
 def GetForUid(model_class, uid):
+  """Retrieves a model.* for a given user id from the datastore.
+
+  This only works for model classes that are in a 1-to-1 relationship with the
+  user, like the Garden; it doesn't work for say Relatioship or Rose.
+
+  Args:
+    model_class: (class) A subclass of ndb.Model.
+    uid: (int) The user's object id.
+
+  Returns:
+    (model_class) The retrieved model.
+  """
   return Guarantee(model_class.get_by_id(1, parent=UKey(uid)))
 
 
@@ -47,9 +86,20 @@ def LoadAccount(uid):
   return user, match, search
 
 
+# pylint: disable=no-value-for-parameter
 @ndb.transactional(xg=True)
 def CreateAccount(name, latitude, longitude, now=None):
   """Create a new account.
+
+  Args:
+    name: (str) The user's nickname.
+    latitude: (float) Degress latitude.
+    longitude: (float) Degress longitude.
+    now: (datetime.datetime) To peg "now" to. For testing.
+
+  Returns:
+    (model.User, model.MatchParameters, model.SearchSettings) For the newly
+    created user.
   """
   now = now or datetime.datetime.today()
   user = model.User(name=name, joined=now)

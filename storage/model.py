@@ -5,6 +5,7 @@ from google.appengine.ext.ndb import polymodel
 
 
 class GeoCoordProperty(ndb.FloatProperty):
+  """Property for latitude and longitude values."""
 
   # pylint: disable=no-self-use
   def _validate(self, value):
