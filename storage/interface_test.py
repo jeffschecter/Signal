@@ -9,7 +9,7 @@ from storage import model
 from test import testutils
 
 
-class UtilitiesTest(unittest.TestCase):
+class InterfaceTest(unittest.TestCase):
 
   @classmethod
   def setUpClass(cls):

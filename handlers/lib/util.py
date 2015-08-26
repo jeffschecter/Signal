@@ -126,6 +126,7 @@ class RequestHandler(webapp2.RequestHandler):
 
 
 class AuthedHandler(RequestHandler):
+  """Accepts requests for endpoints that require a user to be logged in."""
 
   def _VerifyIn(self):
     #TODO Actually authenticate
@@ -134,6 +135,9 @@ class AuthedHandler(RequestHandler):
 
 
 class FileAcceptingAuthedHandler(AuthedHandler):
+  """Accepts short files encoded as url-safe base64 strings, with the "-"
+  and "_" characters used in place of "+" and "/". The file should be placed
+  in the "blob" argument of the request json."""
 
   in_format = ioformat.Blob
   out_format = ioformat.Trivial
