@@ -8,7 +8,6 @@ from google.appengine.ext import ndb
 from handlers.lib import ioformat
 from handlers.lib import util
 from storage import interface
-from storage import model
 
 
 ROUTES = []

@@ -3,13 +3,8 @@
 """Tests for the messaging endpoints."""
 
 import common
-import datetime
 import unittest
 
-from google.appengine.ext import ndb
-from handlers.lib import util
-from storage import interface
-from storage import model
 from test import testutils
 
 
@@ -40,7 +35,6 @@ class InterfaceTest(unittest.TestCase):
     blob_out = args["blob"]
     self.assertEqual(blob_in, blob_out)
 
-
   def testVerifyListen(self):
     env, _ = self.api.Call(
         "/message/listen",
@@ -53,3 +47,7 @@ class InterfaceTest(unittest.TestCase):
         env["error_report"],
         ("VerificationError: While checking input: ValueError: "
          "User 3 tried to listen to a message from 1 to 2"))
+
+
+if __name__ == "__main__":
+  unittest.main()

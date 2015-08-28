@@ -1,6 +1,5 @@
 """Utilities for defining endpoints."""
 
-import base64
 import common
 import json
 import logging
