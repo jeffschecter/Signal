@@ -104,7 +104,8 @@ class Watering(ndb.Expando):
   Name: Auto
   """
   timestamp = ndb.DateTimeProperty()
-  kind = ndb.IntegerProperty()
+  # 0=$$$, 1=invite friends, 2=lottery
+  kind = ndb.IntegerProperty(required=True, choices=[0, 1, 2])
   bloomed_rose = ndb.IntegerProperty()
 
 

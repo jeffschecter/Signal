@@ -313,6 +313,15 @@ def GetImage(uid):
 # --------------------------------------------------------------------------- #
 
 def CanMessage(sender_rel, recipient_rel):
+  """Determines whether one user is allowed to message another.
+
+  Args:
+    sender_rel: (model.Relationship) With sender as agent.
+    recipient_rel: (model.Relationship) With recipient as agent.
+
+  Returns:
+    (bool) True if the sender is allowed to message the recipient.
+  """
   #TODO
   return True
 

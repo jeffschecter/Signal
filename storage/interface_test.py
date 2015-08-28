@@ -152,6 +152,9 @@ class InterfaceTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       interface.SetImage(1, testutils.Resource("intro.aac"))
 
+  def testCanMessage(self):
+    raise NotImplementedError
+
   def testSendMessageAndGetMessageFile(self):
     now = datetime.datetime.today()
     in_blob = testutils.Resource("intro.aac")
@@ -236,6 +239,15 @@ class InterfaceTest(unittest.TestCase):
         (newly_planted_rose.bloomed - now) >= datetime.timedelta(hours=1))
     send_again = interface.SendRose(1, 2, 1)
     self.assertEqual(None, send_again)
+
+  def testWaterPayment(self):
+    raise NotImplementedError
+
+  def testWaterInvite(self):
+    raise NotImplementedError
+
+  def testWaterLotto(self):
+    raise NotImplementedError
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ class Load(util.AuthedHandler):
   out_format = LoadOutformat
 
   def _VerifyOut(self):
-    assert len(self.response_args["roses"]) ==  3, (
+    assert len(self.response_args["roses"]) == 3, (
         "Expected 3 roses in the garden.")
 
   def Handle(self):
@@ -77,8 +77,8 @@ ROUTES.append(("/garden/send/*", Send))
 # Water your garden.                                                          #
 # --------------------------------------------------------------------------- #
 
-class WaterInformat(ndb.Model):
-  pass
+class WaterInformat(ndb.Expando):
+  kind = ndb.IntegerProperty(required=True, choices=[0, 1, 2])
 
 
 class WaterOutformat(ndb.Model):
