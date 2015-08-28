@@ -2,6 +2,8 @@
 
 """Endpoints for working with a user's messages."""
 
+import common
+
 from google.appengine.ext import ndb
 from handlers.lib import ioformat
 from handlers.lib import util
@@ -17,17 +19,29 @@ ROUTES = []
 # --------------------------------------------------------------------------- #
 
 class ListenInformat(ndb.Model):
-  profile = ndb.IntegerProperty(required=True)
-  message = ndb.IntegerProperty(required=True)
+  sender = ndb.IntegerProperty(required=True)
+  recipient = ndb.IntegerProperty(required=True)
+  send_timestamp_ms = ndb.IntegerProperty(required=True)
 
 
 class Listen(util.AuthedHandler):
 
   in_format = ListenInformat
-  out_format = ioformat.AudioOutput
+
+  def _VerifyIn(self):
+    uid = self.GetEnv("uid")
+    if uid not in (sender, recipient):
+      raise util.VerificationError(
+          "User {u} tried to listen to a message from {s} to {r}".format(
+              u=uid, s=sender, r=recipient))
 
   def Handle(self):
-    util.TODO()
+    blob = interface.GetMessageFile(
+        self.GetArg("sender"),
+        self.GetArg("recipient"),
+        self.GetArg("send_timestamp_ms"),
+        True)
+    return "", blob
 
 ROUTES.append(('/message/listen/*', Listen))
 
@@ -37,16 +51,24 @@ ROUTES.append(('/message/listen/*', Listen))
 # --------------------------------------------------------------------------- #
 
 class SendInformat(ndb.Model):
-  profile = ndb.IntegerProperty(required=True)
+  recipient = ndb.IntegerProperty(required=True)
   blob = ioformat.BlobProperty(required=True)
 
 
-class Send(util.AuthedHandler):
+class SendOutformat(ndb.Model):
+  send_timestamp_ms = ndb.IntegerProperty(required=True)
+
+
+class Send(util.FileAcceptingAuthedHandler):
 
   in_format = SendInformat
-  out_format = ioformat.Trivial
+  out_format = SendOutformat
 
   def Handle(self):
-    util.TODO()
+    send_time = interface.SendMessage(
+        self.GetEnv("uid"),
+        self.GetArg("recipient"),
+        self.file)
+    self.SetArg("send_timestamp_ms", common.Milis(send_time))
 
 ROUTES.append(('/message/send/*', Send))

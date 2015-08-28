@@ -226,3 +226,18 @@ class FileAcceptingAuthedHandler(AuthedHandler):
     """Check that the caller sent a file."""
     AuthedHandler._VerifyIn(self)
     self.file = Decode(self.GetArg("blob"))
+
+
+class FileSendingAuthedHandler(AuthedHandler):
+  """Responds to authorized requests with a file."""
+
+  def Respond(self):
+    query = json.loads(self.request.params.get('data'))
+    self.env = query.get("env", {})
+    self.args = query.get("args", {})
+    self.VerifyIn()
+    mimetype, blob = self.Handle()
+    self.response.headers['Content-Type'] = mimetype
+    self.response.headers['Content-Length'] = len(blob)
+    self.response.write(blob)
+

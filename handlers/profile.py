@@ -52,7 +52,7 @@ ROUTES.append(('/profile/next/*', Next))
 class Listen(util.AuthedHandler):
 
   in_format = ioformat.DesignateUser
-  out_format = ioformat.AudioOutput
+  out_format = ioformat.Blob
 
   def Handle(self):
     util.TODO()

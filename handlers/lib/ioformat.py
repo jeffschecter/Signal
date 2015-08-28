@@ -27,11 +27,6 @@ class Blob(ndb.Model):
   blob = BlobProperty(required=True)
 
 
-class AudioOutput(ndb.Model):
-  """Audio file."""
-  pass
-
-
 class DesignateUser(ndb.Model):
   """Nothing but a "partner" user for the logged-in user to interact with."""
   uid = ndb.IntegerProperty(required=True)

@@ -1,5 +1,6 @@
 """Interface for retrieving and writing data to Datastore."""
 
+import common
 import datetime
 
 from google.appengine.ext import ndb
@@ -9,21 +10,6 @@ from storage import model
 # --------------------------------------------------------------------------- #
 # Some utilities.                                                             #
 # --------------------------------------------------------------------------- #
-
-
-EPOCH = datetime.datetime.utcfromtimestamp(0)
-
-
-def Milis(dt):
-  """Converts a datetime to miliseconds since epoch.
-
-  Args:
-    dt: (datetime.datetime) The datetime to convert.
-
-  Returns:
-    (int) Miliseconds since epoch.
-  """
-  return int((dt - EPOCH).total_seconds() * 1000)
 
 
 def Guarantee(obj):
@@ -97,6 +83,8 @@ def Relationship(agent, patient, full=True):
   Returns:
     (model.Relationship or model.FullRelationship) The relationship.
   """
+  if agent == patient:
+    raise ValueError("A user has no relationship with itself.")
   cls = model.FullRelationship if full else model.Relationship
   obj = cls(id=patient, parent=UKey(agent))
   retrieved = obj.key.get()
@@ -107,18 +95,16 @@ def Relationship(agent, patient, full=True):
 
 
 def Relationships(sender, recipient, full=True):
-  """TODO
-  """
   return (Relationship(sender, recipient, full=full),
           Relationship(recipient, sender, full=full))
 
 
 def GetForRelationship(model_class, agent, patient, ts):
-  """TODO
-  """
+  if agent == patient:
+    raise ValueError("A user has no relationship with itself.")
   assert isinstance(ts, (int, datetime.datetime))
   if isinstance(ts, datetime.datetime):
-    ts = Milis(ts)
+    ts = common.Milis(ts)
   parent_key = model.Relationship(id=patient, parent=UKey(agent)).key
   return Guarantee(model_class.get_by_id(ts, parent=parent_key))
 
@@ -285,7 +271,7 @@ def GetImage(uid):
 
 
 # --------------------------------------------------------------------------- #
-# Working with relationships.                                                 #
+# Working with messages.                                                      #
 # --------------------------------------------------------------------------- #
 
 # pylint: disable=no-value-for-parameter
@@ -303,7 +289,7 @@ def SendMessage(sender, recipient, blob, now=None):
     (datetime.datetime) The timestamp assigned to the message.
   """
   now = now or datetime.datetime.today()
-  ts = Milis(now)
+  ts = common.Milis(now)
   sender_rel, recipient_rel = Relationships(sender, recipient, full=True)
 
   # Save the actual audio

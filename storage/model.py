@@ -178,7 +178,6 @@ class Message(ndb.Model):
   Name: (int) Send timestamp, in miliseconds since epoch
   """
   new = ndb.BooleanProperty(required=True, default=True)
-  length_miliseconds = ndb.IntegerProperty()
   retrieved = ndb.DateTimeProperty(repeated=True)
 
 

@@ -173,7 +173,8 @@ class InterfaceTest(unittest.TestCase):
     self.assertEqual([now2], sent_msg.retrieved)
     self.assertEqual([now2], rcvd_msg.retrieved)
 
-    # Retrieve and mark as listened once more, ensure idempotent
+    # Retrieve and mark as listened once more, ensure retrievals count up and
+    # affect on number of new messages is idempotent
     now3 = now + datetime.timedelta(days=2)
     interface.GetMessageFile(1, 2, now, True, now=now3)
     recip_rel = interface.Relationship(2, 1)
