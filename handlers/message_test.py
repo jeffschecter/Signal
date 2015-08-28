@@ -27,16 +27,16 @@ class InterfaceTest(unittest.TestCase):
   def testSendListen(self):
     blob_in = common.Encode(testutils.Resource("intro.aac"))
     _, args = self.api.Call(
-      "/message/send",
-      recipient=2,
-      blob=blob_in)
+        "/message/send",
+        recipient=2,
+        blob=blob_in)
     send_ts = args["send_timestamp_ms"]
     _, args = self.api.Call(
-      "/message/listen",
-      env={"uid": 2},
-      sender=testutils.DEFAULT_UID,
-      recipient=2,
-      send_timestamp_ms=send_ts)
+        "/message/listen",
+        env={"uid": 2},
+        sender=testutils.DEFAULT_UID,
+        recipient=2,
+        send_timestamp_ms=send_ts)
     blob_out = args["blob"]
     self.assertEqual(blob_in, blob_out)
 
@@ -50,6 +50,6 @@ class InterfaceTest(unittest.TestCase):
         recipient=2,
         send_timestamp_ms=12345)
     self.assertEqual(
-      env["error_report"],
-      ("VerificationError: While checking input: ValueError: "
-       "User 3 tried to listen to a message from 1 to 2"))
+        env["error_report"],
+        ("VerificationError: While checking input: ValueError: "
+         "User 3 tried to listen to a message from 1 to 2"))
