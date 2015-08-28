@@ -2,7 +2,7 @@
 
 """Tests for handlers.account endpoints."""
 
-import base64
+import common
 import unittest
 
 from storage import interface
@@ -39,13 +39,13 @@ class AccountHandlerTest(unittest.TestCase):
 
   def testSetIntro(self):
     audio = testutils.Resource("intro.aac")
-    self.api.Call("/account/set_intro", blob=base64.b64encode(audio, "-_"))
+    self.api.Call("/account/set_intro", blob=common.Encode(audio))
     out_audio = interface.GetForUid(model.IntroFile, testutils.DEFAULT_UID).blob
     self.assertEqual(audio, out_audio)
 
   def testSetImage(self):
     img = testutils.Resource("icon.png")
-    self.api.Call("/account/set_image", blob=base64.b64encode(img, "-_"))
+    self.api.Call("/account/set_image", blob=common.Encode(img))
     out_img = interface.GetForUid(model.ImageFile, testutils.DEFAULT_UID).blob
     self.assertEqual(img, out_img)
 

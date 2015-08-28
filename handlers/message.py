@@ -27,11 +27,14 @@ class ListenInformat(ndb.Model):
 class Listen(util.AuthedHandler):
 
   in_format = ListenInformat
+  out_format = ioformat.Blob
 
   def _VerifyIn(self):
     uid = self.GetEnv("uid")
+    sender = self.GetArg("sender")
+    recipient = self.GetArg("recipient")
     if uid not in (sender, recipient):
-      raise util.VerificationError(
+      raise ValueError(
           "User {u} tried to listen to a message from {s} to {r}".format(
               u=uid, s=sender, r=recipient))
 
@@ -41,7 +44,7 @@ class Listen(util.AuthedHandler):
         self.GetArg("recipient"),
         self.GetArg("send_timestamp_ms"),
         True)
-    return "", blob
+    self.SetArg("blob", common.Encode(blob))
 
 ROUTES.append(('/message/listen/*', Listen))
 

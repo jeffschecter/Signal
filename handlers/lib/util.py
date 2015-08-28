@@ -1,6 +1,7 @@
 """Utilities for defining endpoints."""
 
 import base64
+import common
 import json
 import logging
 import webapp2
@@ -16,42 +17,6 @@ from handlers.lib import ioformat
 class VerificationError(Exception):
   """Raised when endpoint inputs or outputs are invalid."""
   pass
-
-
-def JsonEncoder(obj):
-  """Handles encoding to JSON of objects that python usually wigs out on.
-
-  Args:
-    obj: (*) The object to encode.
-
-  Returns:
-    (string) A serialized version of the object.
-  """
-  # For date, time, and datetime, convert to isoformat string
-  if hasattr(obj, 'isoformat'):
-    return obj.isoformat()
-  else:
-    raise TypeError(
-        "Object of type {t} with value of {v} is not JSON serializable".format(
-            t=type(obj), v=repr(obj)))
-
-
-def Decode(b64):
-  """Decodes base64 strings.
-
-  We use a url-safe encoding that utilizes "-" and "_" instead of the default
-  "+" and "/" characters, and handle any padding issues without raising errors.
-
-  Args:
-    b64: (str) The encoded string.
-
-  Returns:
-    (str) The decoded string.
-  """
-  missing_padding = 4 - len(b64) % 4
-  if missing_padding:
-    b64 += b'='* missing_padding
-  return base64.b64decode(str(b64), "-_")
 
 
 def TODO():
@@ -179,7 +144,7 @@ class RequestHandler(webapp2.RequestHandler):
     """Serialize the response arguments and variables."""
     return json.dumps(
         {"env": self.response_env, "args": self.response_args},
-        default=JsonEncoder)
+        default=common.JsonEncoder)
 
   # pylint: disable=broad-except
   def Respond(self):
@@ -225,19 +190,4 @@ class FileAcceptingAuthedHandler(AuthedHandler):
   def _VerifyIn(self):
     """Check that the caller sent a file."""
     AuthedHandler._VerifyIn(self)
-    self.file = Decode(self.GetArg("blob"))
-
-
-class FileSendingAuthedHandler(AuthedHandler):
-  """Responds to authorized requests with a file."""
-
-  def Respond(self):
-    query = json.loads(self.request.params.get('data'))
-    self.env = query.get("env", {})
-    self.args = query.get("args", {})
-    self.VerifyIn()
-    mimetype, blob = self.Handle()
-    self.response.headers['Content-Type'] = mimetype
-    self.response.headers['Content-Length'] = len(blob)
-    self.response.write(blob)
-
+    self.file = common.Decode(self.GetArg("blob"))
