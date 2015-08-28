@@ -85,14 +85,14 @@ def GetForUid(model_class, uid):
 
 def Relationship(agent, patient, full=True):
   """Retrieves or creates a relationship for two users.
-  
+
   Note: If the relationship doesn't exist yet, nothing is written to the db by
   this function.
 
   Args:
     agent: (int) The user object id of the actor or sender.
     patient: (int) The user object id of the patient or recipient.
-    full: (boolean) True to access the full relationship.
+    full: (bool) True to access the full relationship.
 
   Returns:
     (model.Relationship or model.FullRelationship) The relationship.
@@ -105,6 +105,22 @@ def Relationship(agent, patient, full=True):
   else:
     return obj
 
+
+def Relationships(sender, recipient, full=True):
+  """TODO
+  """
+  return (Relationship(sender, recipient, full=full),
+          Relationship(recipient, sender, full=full))
+
+
+def GetForRelationship(model_class, agent, patient, ts):
+  """TODO
+  """
+  assert isinstance(ts, (int, datetime.datetime))
+  if isinstance(ts, datetime.datetime):
+    ts = Milis(ts)
+  parent_key = model.Relationship(id=patient, parent=UKey(agent)).key
+  return Guarantee(model_class.get_by_id(ts, parent=parent_key))
 
 # --------------------------------------------------------------------------- #
 # Working with user accounts.                                                 #
@@ -282,11 +298,13 @@ def SendMessage(sender, recipient, blob, now=None):
     recipient: (int) The user object id of the recipient.
     blob: (str) Raw AAC file bytestring.
     now: (datetime.datetime) To peg current time; for testing.
+
+  Returns:
+    (datetime.datetime) The timestamp assigned to the message.
   """
   now = now or datetime.datetime.today()
   ts = Milis(now)
-  sender_rel = Relationship(sender, recipient, full=True)
-  recipient_rel = Relationship(recipient, sender, full=True)
+  sender_rel, recipient_rel = Relationships(sender, recipient, full=True)
 
   # Save the actual audio
   model.MessageFile(id=ts, parent=sender_rel.key, blob=blob).put()
@@ -299,6 +317,45 @@ def SendMessage(sender, recipient, blob, now=None):
   sender_rel.last_sent_message = now
   sender_rel.put()
   recipient_rel.last_received_message = now
+  recipient_rel.new_messages += 1
   recipient_rel.put()
 
+  return now
 
+
+# pylint: disable=no-value-for-parameter
+@ndb.transactional(xg=True)
+def GetMessageFile(sender, recipient, send_time, record_retrieval, now=None):
+  """Retrieves the audio of a message.
+
+  Args:
+    sender: (int) The user object id of the sender.
+    recipient: (int) The user object id of the recipient.
+    send_time: (int or datetime.datetime) The message timestamp.
+    record_retrieval: (bool) If true, unmark the message as new and record
+      when it was retrieved.
+    now: (datetime.datetime) To peg current time; for testing.
+
+  Returns:
+    (str) Raw aac file bytestring.
+  """
+  now = now or datetime.datetime.today()
+  blob = GetForRelationship(
+      model.MessageFile, sender, recipient, send_time).blob
+
+  # Record the tretrieval
+  if record_retrieval:
+    sent_msg = GetForRelationship(
+        model.SentMessage, sender, recipient, send_time)
+    rcvd_msg = GetForRelationship(
+        model.ReceivedMessage, recipient, sender, send_time)
+    if rcvd_msg.new:
+      recipient_rel = Relationship(recipient, sender)
+      recipient_rel.new_messages -= 1
+      recipient_rel.put()
+    for msg in (sent_msg, rcvd_msg):
+      msg.new = False
+      msg.retrieved.append(now)
+      msg.put()
+
+  return blob

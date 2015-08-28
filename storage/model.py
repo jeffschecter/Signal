@@ -141,10 +141,10 @@ class Relationship(polymodel.PolyModel):
 
 class FullRelationship(Relationship):
   """A relationship where users have exchange communications."""
-  blocked = ndb.BooleanProperty()
-  saved = ndb.BooleanProperty()
-  new_roses = ndb.IntegerProperty()
-  new_messages = ndb.IntegerProperty()
+  blocked = ndb.BooleanProperty(default=False)
+  saved = ndb.BooleanProperty(default=False)
+  new_roses = ndb.IntegerProperty(default=0)
+  new_messages = ndb.IntegerProperty(default=0)
   last_sent_rose = ndb.DateTimeProperty()
   last_received_rose = ndb.DateTimeProperty()
   last_sent_message = ndb.DateTimeProperty()

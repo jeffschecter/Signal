@@ -155,7 +155,7 @@ class RequestHandler(webapp2.RequestHandler):
               t=type(e).__name__, s=str(e)))
 
   def _VerifyIn(self):
-    """Subclasses should override _VerifyIn to perform any additional checks
+    """Subclasses should override with additional checks
     required to validate the request."""
     pass
 

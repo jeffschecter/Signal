@@ -45,7 +45,16 @@ class InterfaceTest(unittest.TestCase):
       interface.GetForUid(model.MatchParameters, 12345)
 
   def testRelationship(self):
-    raise NotImplementedError
+    #TODO
+    pass
+
+  def testRelationships(self):
+    #TODO
+    pass
+
+  def testGetForRelationship(self):
+    #TODO
+    pass
 
   def testLoadAccount(self):
     user, _, _ = interface.LoadAccount(1)
@@ -128,10 +137,56 @@ class InterfaceTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       interface.SetImage(1, testutils.Resource("intro.aac"))
 
-  def testSendMessage(self):
+  def testSendMessageAndGetMessageFile(self):
     now = datetime.datetime.today()
-    interface.SendMessage(1, 2, testutils.Resource("intro.aac"), now=now)
-    #TODO
+    in_blob = testutils.Resource("intro.aac")
+    interface.SendMessage(1, 2, in_blob, now=now)
+
+    # Retrieve without marking the message as listened to
+    out_blob = interface.GetMessageFile(1, 2, now, False)
+    self.assertEqual(in_blob, out_blob)
+    sender_rel = interface.Relationship(1, 2)
+    recip_rel = interface.Relationship(2, 1)
+    sent_msg = interface.GetForRelationship(
+        model.SentMessage, 1, 2, now)
+    rcvd_msg = interface.GetForRelationship(
+        model.ReceivedMessage, 2, 1, now)
+    self.assertEqual(now, sender_rel.last_sent_message)
+    self.assertEqual(now, recip_rel.last_received_message)
+    self.assertEqual(1, recip_rel.new_messages)
+    self.assertEqual(True, sent_msg.new)
+    self.assertEqual(True, rcvd_msg.new)
+    self.assertEqual([], sent_msg.retrieved)
+    self.assertEqual([], rcvd_msg.retrieved)
+
+    # Retrieve again, this time marking it as listened
+    now2 = now + datetime.timedelta(days=1)
+    interface.GetMessageFile(1, 2, now, True, now=now2)
+    recip_rel = interface.Relationship(2, 1)
+    sent_msg = interface.GetForRelationship(
+        model.SentMessage, 1, 2, now)
+    rcvd_msg = interface.GetForRelationship(
+        model.ReceivedMessage, 2, 1, now)
+    self.assertEqual(0, recip_rel.new_messages)
+    self.assertEqual(False, sent_msg.new)
+    self.assertEqual(False, rcvd_msg.new)
+    self.assertEqual([now2], sent_msg.retrieved)
+    self.assertEqual([now2], rcvd_msg.retrieved)
+
+    # Retrieve and mark as listened once more, ensure idempotent
+    now3 = now + datetime.timedelta(days=2)
+    interface.GetMessageFile(1, 2, now, True, now=now3)
+    recip_rel = interface.Relationship(2, 1)
+    sent_msg = interface.GetForRelationship(
+        model.SentMessage, 1, 2, now)
+    rcvd_msg = interface.GetForRelationship(
+        model.ReceivedMessage, 2, 1, now)
+    self.assertEqual(0, recip_rel.new_messages)
+    self.assertEqual(False, sent_msg.new)
+    self.assertEqual(False, rcvd_msg.new)
+    self.assertEqual([now2, now3], sent_msg.retrieved)
+    self.assertEqual([now2, now3], rcvd_msg.retrieved)
+
 
 if __name__ == "__main__":
   unittest.main()
