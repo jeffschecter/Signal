@@ -1,6 +1,6 @@
 # pylint: disable=missing-docstring
 
-"""Endpoints for working with a user's messages."""
+"""Endpoints for working with a user"s messages."""
 
 import common
 
@@ -45,7 +45,7 @@ class Listen(util.AuthedHandler):
         True)
     self.SetArg("blob", common.Encode(blob))
 
-ROUTES.append(('/message/listen/*', Listen))
+ROUTES.append(("/message/listen/*", Listen))
 
 
 # --------------------------------------------------------------------------- #
@@ -73,4 +73,4 @@ class Send(util.FileAcceptingAuthedHandler):
         self.file)
     self.SetArg("send_timestamp_ms", common.Milis(send_time))
 
-ROUTES.append(('/message/send/*', Send))
+ROUTES.append(("/message/send/*", Send))

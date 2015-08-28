@@ -84,12 +84,9 @@ class InterfaceTest(unittest.TestCase):
     self.assertEqual(now, match.last_activity)
     self.assertEqual(1, match.key.id())
     self.assertEqual(1, search.key.id())
-    interface.Guarantee(model.Rose.get_by_id(1, parent=model.Garden(
-        id=1, parent=interface.UKey(testutils.DEFAULT_UID)).key))
-    interface.Guarantee(model.Rose.get_by_id(2, parent=model.Garden(
-        id=1, parent=interface.UKey(testutils.DEFAULT_UID)).key))
-    interface.Guarantee(model.Rose.get_by_id(3, parent=model.Garden(
-        id=1, parent=interface.UKey(testutils.DEFAULT_UID)).key))
+    interface.GetGrowingRose(1, 1)
+    interface.GetGrowingRose(1, 2)
+    interface.GetGrowingRose(1, 3)
     user2, match2, search2 = interface.LoadAccount(user.key.id())
     self.assertEqual(user, user2)
     self.assertEqual(match, match2)
@@ -214,12 +211,27 @@ class InterfaceTest(unittest.TestCase):
     self.assertTrue(mean > 23)
     self.assertTrue(mean < 25)
 
+  def testGetGrowingRose(self):
+    with self.assertRaises(AssertionError):
+      interface.GetGrowingRose(1, 0)
+    interface.GetGrowingRose(1, 1)
+    interface.GetGrowingRose(1, 2)
+    interface.GetGrowingRose(1, 3)
+    with self.assertRaises(AssertionError):
+      interface.GetGrowingRose(1, 4)
+
+  def testGetGarden(self):
+    garden = interface.GetGarden(1)
+    self.assertEqual(3, len(garden))
+    self.assertEqual([1, 2, 3], [rose.key.id() for rose in garden])
+    with self.assertRaises(LookupError):
+      interface.GetGarden(12345)
+
   def testSendRose(self):
     now = interface.SendRose(1, 2, 1)
     interface.GetForRelationship(model.SentRose, 1, 2, now)
     interface.GetForRelationship(model.ReceivedRose, 2, 1, now)
-    newly_planted_rose = interface.Guarantee(model.Rose.get_by_id(
-        id=1, parent=model.Garden(id=1, parent=interface.UKey(1)).key))
+    newly_planted_rose = interface.GetGrowingRose(1, 1)
     self.assertTrue(
         (newly_planted_rose.bloomed - now) >= datetime.timedelta(hours=1))
     send_again = interface.SendRose(1, 2, 1)

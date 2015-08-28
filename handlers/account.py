@@ -1,6 +1,6 @@
 # pylint: disable=missing-docstring
 
-"""Endpoints for working with a user's account."""
+"""Endpoints for working with a user"s account."""
 
 from google.appengine.ext import ndb
 from handlers.lib import ioformat
@@ -37,7 +37,7 @@ class Create(util.RequestHandler):
         self.GetEnv("longitude"))
     self.UpdateArgs(uid=user.key.id())
 
-ROUTES.append(('/account/create/*', Create))
+ROUTES.append(("/account/create/*", Create))
 
 
 # --------------------------------------------------------------------------- #
@@ -76,7 +76,7 @@ class Load(util.AuthedHandler):
     user, match, search = interface.LoadAccount(self.GetEnv("uid"))
     self.UpdateArgs(user, match, search, uid=user.key.id())
 
-ROUTES.append(('/account/load/*', Load))
+ROUTES.append(("/account/load/*", Load))
 
 
 # --------------------------------------------------------------------------- #
@@ -88,7 +88,7 @@ class SetIntro(util.FileAcceptingAuthedHandler):
   def Handle(self):
     interface.SetIntro(self.GetEnv("uid"), self.file)
 
-ROUTES.append(('/account/set_intro/*', SetIntro))
+ROUTES.append(("/account/set_intro/*", SetIntro))
 
 
 # --------------------------------------------------------------------------- #
@@ -100,7 +100,7 @@ class SetImage(util.FileAcceptingAuthedHandler):
   def Handle(self):
     interface.SetImage(self.GetEnv("uid"), self.file)
 
-ROUTES.append(('/account/set_image/*', SetImage))
+ROUTES.append(("/account/set_image/*", SetImage))
 
 
 # --------------------------------------------------------------------------- #
@@ -131,7 +131,7 @@ class Bio(util.AuthedHandler):
     interface.UpdateAccount(self.GetEnv("uid"), **self.args)
 
 
-ROUTES.append(('/account/bio/*', Bio))
+ROUTES.append(("/account/bio/*", Bio))
 
 
 # --------------------------------------------------------------------------- #
@@ -146,7 +146,7 @@ class Preferences(util.AuthedHandler):
   def Handle(self):
     interface.UpdateAccount(self.GetEnv("uid"), **self.args)
 
-ROUTES.append(('/account/preferences/*', Preferences))
+ROUTES.append(("/account/preferences/*", Preferences))
 
 
 # --------------------------------------------------------------------------- #
@@ -161,7 +161,7 @@ class Deactivate(util.AuthedHandler):
   def Handle(self):
     interface.UpdateAccount(self.GetEnv("uid"), active=False)
 
-ROUTES.append(('/account/deactivate/*', Deactivate))
+ROUTES.append(("/account/deactivate/*", Deactivate))
 
 
 # --------------------------------------------------------------------------- #
@@ -176,7 +176,7 @@ class Reactivate(util.AuthedHandler):
   def Handle(self):
     interface.UpdateAccount(self.GetEnv("uid"), active=True)
 
-ROUTES.append(('/account/reactivate/*', Reactivate))
+ROUTES.append(("/account/reactivate/*", Reactivate))
 
 
 # --------------------------------------------------------------------------- #
@@ -191,7 +191,7 @@ class Logout(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/account/logout/*', Logout))
+ROUTES.append(("/account/logout/*", Logout))
 
 
 # --------------------------------------------------------------------------- #
@@ -219,4 +219,4 @@ class Ping(util.AuthedHandler):
     self.SetArg("latitude", match.latitude)
     self.SetArg("longitude", match.longitude)
 
-ROUTES.append(('/account/ping/*', Ping))
+ROUTES.append(("/account/ping/*", Ping))

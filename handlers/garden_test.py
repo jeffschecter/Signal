@@ -18,19 +18,24 @@ class InterfaceTest(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
     cls.api = testutils.TestApi()
-    testutils.FakeUsers(3)
+    testutils.FakeUsers(2)
 
   @classmethod
   def tearDownClass(cls):
     cls.api.Stop()
 
   def testLoad(self):
-    #TODO
-    pass
+    _, args = self.api.Call("/garden/load")
+    r1, r2, r3 = args["roses"]
+    self.assertEqual(1, r1["id"])
+    self.assertEqual(2, r2["id"])
+    self.assertEqual(3, r3["id"])
 
   def testSend(self):
-    #TODO
-    pass
+    _, args = self.api.Call("/garden/send", recipient=2, rose_number=1)
+    self.assertTrue(args["success"])
+    _, args = self.api.Call("/garden/send", recipient=2, rose_number=1)
+    self.assertFalse(args["success"])
 
   def testWater(self):
     #TODO

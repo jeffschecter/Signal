@@ -413,6 +413,34 @@ def RandomGrowingPeriod():
   return datetime.timedelta(hours=hours)
 
 
+def GetGrowingRose(uid, rose_number):
+  """Gets the given growing rose.
+
+  Args:
+    uid: (int) The user object id of the user to fetch a rose for.
+    rose_number: (int) The id of the rose to get; 1, 2, or 3.
+
+  Returns:
+    (model.Rose) The rose.
+  """
+  assert rose_number in (1, 2, 3), "Rose number must be 1, 2, or 3."
+  return Guarantee(model.Rose.get_by_id(
+      id=rose_number, parent=model.Garden(id=1, parent=UKey(uid)).key))
+
+
+def GetGarden(uid):
+  """Returns all of a user's growing roses.
+
+  Args:
+    uid: (int) The user object id.
+
+  Returns:
+    (triple of model.Rose) The roses.
+  """
+  return [GetGrowingRose(uid, i) for i in (1, 2, 3)]
+
+
+
 @ndb.transactional(xg=True)
 def SendRose(sender, recipient, rose_number, now=None):
   """Sends a rose from the sender to the recipient, if possible.
@@ -428,10 +456,8 @@ def SendRose(sender, recipient, rose_number, now=None):
   """
   assert sender != recipient, "User {u} tried to send itself a rose.".format(
       u=sender)
-  assert rose_number in (1, 2, 3)
   now = now or datetime.datetime.today()
-  growing_rose = Guarantee(model.Rose.get_by_id(
-      id=rose_number, parent=model.Garden(id=1, parent=UKey(sender)).key))
+  growing_rose = GetGrowingRose(sender, rose_number)
 
   # Sending fails if the rose has yet to bloom.
   if growing_rose.bloomed > now:

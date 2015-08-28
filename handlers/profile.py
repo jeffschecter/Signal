@@ -12,7 +12,7 @@ from storage import model
 ROUTES = []
 
 # --------------------------------------------------------------------------- #
-# Load a match's profile information.                                         #
+# Load a match"s profile information.                                         #
 # --------------------------------------------------------------------------- #
 
 class LoadOutformat(ndb.Model):
@@ -27,7 +27,7 @@ class Load(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/profile/load/*', Load))
+ROUTES.append(("/profile/load/*", Load))
 
 
 # --------------------------------------------------------------------------- #
@@ -42,11 +42,11 @@ class Next(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/profile/next/*', Next))
+ROUTES.append(("/profile/next/*", Next))
 
 
 # --------------------------------------------------------------------------- #
-# Retrieve a user's audio introduction.                                       #
+# Retrieve a user"s audio introduction.                                       #
 # --------------------------------------------------------------------------- #
 
 class Listen(util.AuthedHandler):
@@ -57,7 +57,7 @@ class Listen(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/profile/listen/*', Listen))
+ROUTES.append(("/profile/listen/*", Listen))
 
 
 # --------------------------------------------------------------------------- #
@@ -72,7 +72,7 @@ class Save(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/profile/save/*', Save))
+ROUTES.append(("/profile/save/*", Save))
 
 
 # --------------------------------------------------------------------------- #
@@ -87,7 +87,7 @@ class Unsave(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/profile/unsave/*', Unsave))
+ROUTES.append(("/profile/unsave/*", Unsave))
 
 
 # --------------------------------------------------------------------------- #
@@ -102,7 +102,7 @@ class Block(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/profile/block/*', Block))
+ROUTES.append(("/profile/block/*", Block))
 
 
 # --------------------------------------------------------------------------- #
@@ -117,4 +117,4 @@ class Unblock(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/profile/unblock/*', Unblock))
+ROUTES.append(("/profile/unblock/*", Unblock))

@@ -1,6 +1,6 @@
 # pylint: disable=missing-docstring
 
-"""Endpoints for working with a user's garden."""
+"""Endpoints for working with a user"s garden."""
 
 from google.appengine.ext import ndb
 from handlers.lib import ioformat
@@ -13,11 +13,11 @@ ROUTES = []
 
 
 # --------------------------------------------------------------------------- #
-# Load the user's garden.                                                     #
+# Load the user"s garden.                                                     #
 # --------------------------------------------------------------------------- #
 
 class LoadOutformat(ndb.Model):
-  pass
+  roses = ndb.StructuredProperty(model.Rose, repeated=True)
 
 
 class Load(util.AuthedHandler):
@@ -25,10 +25,14 @@ class Load(util.AuthedHandler):
   in_format = ioformat.Trivial
   out_format = LoadOutformat
 
-  def Handle(self):
-    util.TODO()
+  def _VerifyOut(self):
+    assert len(self.response_args["roses"]) ==  3, (
+        "Expected 3 roses in the garden.")
 
-ROUTES.append(('/garden/load/*', Load))
+  def Handle(self):
+    self.SetArg("roses", interface.GetGarden(self.GetEnv("uid")))
+
+ROUTES.append(("/garden/load/*", Load))
 
 
 # --------------------------------------------------------------------------- #
@@ -36,12 +40,13 @@ ROUTES.append(('/garden/load/*', Load))
 # --------------------------------------------------------------------------- #
 
 class SendInformat(ndb.Model):
-  partner = ndb.IntegerProperty(required=True)
-  rose = ndb.IntegerProperty(required=True)
+  recipient = ndb.IntegerProperty(required=True)
+  rose_number = ndb.IntegerProperty(required=True)
 
 
 class SendOutformat(ndb.Model):
-  pass
+  success = ndb.BooleanProperty(required=True)
+  roses = ndb.StructuredProperty(model.Rose, repeated=True)
 
 
 class Send(util.AuthedHandler):
@@ -49,10 +54,23 @@ class Send(util.AuthedHandler):
   in_format = SendInformat
   out_format = SendOutformat
 
-  def Handle(self):
-    util.TODO()
+  def _VerifyOut(self):
+    if self.GetArg("success"):
+      assert len(self.GetArg("roses")) == 3, "Expected 3 roses in the garden."
+    else:
+      assert not self.GetArg("roses"), "Expected 0 roses in the garden."
 
-ROUTES.append(('/garden/send/*', Send))
+  def Handle(self):
+    uid = self.GetEnv("uid")
+    success = interface.SendRose(
+        uid,
+        self.GetArg("recipient"),
+        self.GetArg("rose_number"))
+    self.SetArg("success", bool(success))
+    if success:
+      self.SetArg("roses", interface.GetGarden(uid))
+
+ROUTES.append(("/garden/send/*", Send))
 
 
 # --------------------------------------------------------------------------- #
@@ -75,4 +93,4 @@ class Water(util.AuthedHandler):
   def Handle(self):
     util.TODO()
 
-ROUTES.append(('/garden/water/*', Water))
+ROUTES.append(("/garden/water/*", Water))

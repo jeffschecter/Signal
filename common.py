@@ -2,6 +2,9 @@
 
 import base64
 import datetime
+import json
+
+from google.appengine.ext import ndb
 
 
 EPOCH = datetime.datetime.utcfromtimestamp(0)
@@ -31,6 +34,10 @@ def JsonEncoder(obj):
   # For date, time, and datetime, convert to isoformat string
   if hasattr(obj, 'isoformat'):
     return obj.isoformat()
+  elif isinstance(obj, ndb.Model):
+    dict_form = obj.to_dict()
+    dict_form["id"] = obj.key.id()
+    return dict_form
   else:
     raise TypeError(
         "Object of type {t} with value of {v} is not JSON serializable".format(
@@ -51,7 +58,7 @@ def Decode(b64):
   """
   missing_padding = 4 - len(b64) % 4
   if missing_padding:
-    b64 += b'='* missing_padding
+    b64 += b"=" * missing_padding
   return base64.b64decode(str(b64), "-_")
 
 
