@@ -117,8 +117,8 @@ class Rose(ndb.Model):
   Ancestor: (User, Garden) The user's garden
   Name: 1, 1, or 2 (each user has 3 roses)
   """
-  bloomed = ndb.DateTimeProperty()  # In the future when unbloomed
-  planted = ndb.DateTimeProperty()
+  bloomed = ndb.DateTimeProperty(required=True)  # In the future when unbloomed
+  planted = ndb.DateTimeProperty(required=True)
 
 
 # --------------------------------------------------------------------------- #

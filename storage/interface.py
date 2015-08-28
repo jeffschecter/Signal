@@ -2,6 +2,7 @@
 
 import common
 import datetime
+import random
 
 from google.appengine.ext import ndb
 from storage import model
@@ -178,6 +179,16 @@ def CreateAccount(name, latitude, longitude, now=None):
   match.put()
   search = model.SearchSettings(id=1, parent=user.key)
   search.put()
+
+  # Plant the garden
+  rose_kwargs = {
+      "parent": model.Garden(id=1, parent=user.key).key,
+      "bloomed": now,
+      "planted": now}
+  model.Rose(id=1, **rose_kwargs).put()
+  model.Rose(id=2, **rose_kwargs).put()
+  model.Rose(id=3, **rose_kwargs).put()
+
   return user, match, search
 
 
@@ -301,6 +312,11 @@ def GetImage(uid):
 # Working with messages.                                                      #
 # --------------------------------------------------------------------------- #
 
+def CanMessage(sender_rel, recipient_rel):
+  #TODO
+  return True
+
+
 # pylint: disable=no-value-for-parameter
 @ndb.transactional(xg=True)
 def SendMessage(sender, recipient, blob, now=None):
@@ -313,16 +329,22 @@ def SendMessage(sender, recipient, blob, now=None):
     now: (datetime.datetime) To peg current time; for testing.
 
   Returns:
-    (datetime.datetime) The timestamp assigned to the message.
+    (datetime.datetime or None) Send time, or None if sending failed.
   """
+  assert sender != recipient, "User {u} tried to message itself.".format(
+      u=sender)
   now = now or datetime.datetime.today()
   ts = common.Milis(now)
   sender_rel, recipient_rel = Relationships(sender, recipient, full=True)
 
+  # Check that the message is allowed.
+  if not CanMessage(sender_rel, recipient_rel):
+    return
+
   # Save the actual audio
   model.MessageFile(id=ts, parent=sender_rel.key, blob=blob).put()
 
-  # Save a trace in both the sender ad recipient's relationship
+  # Save a trace in both the sender and recipients' relationships
   model.SentMessage(id=ts, parent=sender_rel.key).put()
   model.ReceivedMessage(id=ts, parent=recipient_rel.key).put()
 
@@ -372,3 +394,69 @@ def GetMessageFile(sender, recipient, send_time, record_retrieval, now=None):
       msg.put()
 
   return blob
+
+
+# --------------------------------------------------------------------------- #
+# Working with the garden.                                                    #
+# --------------------------------------------------------------------------- #
+
+def RandomGrowingPeriod():
+  """Random growing time that averages one day.
+
+  Returns:
+    (datetime.timedelta) Time required for a new rose to grow!
+  """
+  hours = random.choice([
+      random.expovariate(1) + 1,   # Just a few hours
+      random.gauss(22.75, 1.5),   # About one day
+      random.gauss(46.75, 1.5)])  # About two days
+  return datetime.timedelta(hours=hours)
+
+
+@ndb.transactional(xg=True)
+def SendRose(sender, recipient, rose_number, now=None):
+  """Sends a rose from the sender to the recipient, if possible.
+
+  Args:
+    sender: (int) The user object id of the sender.
+    recipient: (int) The user object id of the recipient.
+    rose_number: (int) The id of the rose to send.
+    now: (datetime.datetime) To peg current time; for testing.
+
+  Returns:
+    (datetime.datetime or None) Send time, or None if sending failed.
+  """
+  assert sender != recipient, "User {u} tried to send itself a rose.".format(
+      u=sender)
+  assert rose_number in (1, 2, 3)
+  now = now or datetime.datetime.today()
+  growing_rose = Guarantee(model.Rose.get_by_id(
+      id=rose_number, parent=model.Garden(id=1, parent=UKey(sender)).key))
+
+  # Sending fails if the rose has yet to bloom.
+  if growing_rose.bloomed > now:
+    return
+
+  # Save a trace in both the sender and recipients' relationships
+  ts = common.Milis(now)
+  sender_rel, recipient_rel = Relationships(sender, recipient, full=True)
+  rose_kwargs = {
+      "id": ts,
+      "bloomed": growing_rose.bloomed,
+      "planted": growing_rose.planted}
+  model.SentRose(parent=sender_rel.key, **rose_kwargs).put()
+  model.ReceivedRose(parent=recipient_rel.key, **rose_kwargs).put()
+
+  # Update the last sent and last received rose fields in the relationships
+  sender_rel.last_sent_rose = now
+  sender_rel.put()
+  recipient_rel.last_received_rose = now
+  recipient_rel.new_roses += 1
+  recipient_rel.put()
+
+  # Plant a new rose, to bloom on average one day later
+  growing_rose.planeted = now
+  growing_rose.bloomed = now + RandomGrowingPeriod()
+  growing_rose.put()
+
+  return now
