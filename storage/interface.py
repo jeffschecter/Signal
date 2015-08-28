@@ -11,7 +11,6 @@ from storage import model
 # Some utilities.                                                             #
 # --------------------------------------------------------------------------- #
 
-
 def Guarantee(obj):
   """Complains if the input is None, else passes it straight through.
 
@@ -95,11 +94,38 @@ def Relationship(agent, patient, full=True):
 
 
 def Relationships(sender, recipient, full=True):
+  """Retrieves a pair of relationships for two users, from each perspective.
+
+  Args:
+    sender: (int) The user object id of the arbitrarily chosen sender.
+    recipient: (int) The user object id of the arbitrarily chosen recipient.
+    full: (bool) True to access the full relationship.
+
+  Returns:
+    (pair of model.Relationship or model.FullRelationship) The relationships;
+    with the "sender" in the agent roll in the first element, and the "patient"
+    in the agent roll in the second.
+  """
   return (Relationship(sender, recipient, full=full),
           Relationship(recipient, sender, full=full))
 
 
 def GetForRelationship(model_class, agent, patient, ts):
+  """Retrieves a model.* for a given rel. and timestmap from the datastore.
+
+  This only works for objects that have a relationship as their ancestor and
+  are keyed by timestamp, including SentMessage, ReceivedMessage, SentRose,
+  ReceivedRose, and MessageFile.
+
+  Args:
+    model_class: (class) A subclass of ndb.Model.
+    agent: (int) The user object id of the agent.
+    patient: (int) The user object id of the patient.
+    ts: (int or datetime.datetime) Timestamp of the object to be retrieved.
+
+  Returns:
+    (model_class) The retrieved model.
+  """
   if agent == patient:
     raise ValueError("A user has no relationship with itself.")
   assert isinstance(ts, (int, datetime.datetime))
@@ -107,6 +133,7 @@ def GetForRelationship(model_class, agent, patient, ts):
     ts = common.Milis(ts)
   parent_key = model.Relationship(id=patient, parent=UKey(agent)).key
   return Guarantee(model_class.get_by_id(ts, parent=parent_key))
+
 
 # --------------------------------------------------------------------------- #
 # Working with user accounts.                                                 #

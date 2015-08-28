@@ -132,7 +132,7 @@ function-rgx=([A-Z][a-z]*)+$
 function-name-hint=([A-Z][a-z]*)+$
 
 # Regular expression matching correct variable names
-variable-rgx=[a-z_]{1,30}\d?$
+variable-rgx=[[a-z_][a-z0-9_]{1,30}$
 
 # Naming hint for variable names
 variable-name-hint=[a-z_][a-z0-9_]{1,30}$

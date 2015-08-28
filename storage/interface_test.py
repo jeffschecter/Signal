@@ -44,17 +44,29 @@ class InterfaceTest(unittest.TestCase):
     with self.assertRaises(LookupError):
       interface.GetForUid(model.MatchParameters, 12345)
 
-  def testRelationship(self):
-    #TODO
-    pass
-
-  def testRelationships(self):
-    #TODO
-    pass
+  def testRelationshipRelationships(self):
+    rel_12 = interface.Relationship(1, 2)
+    rel_21 = interface.Relationship(2, 1)
+    rels_12 = interface.Relationships(1, 2)
+    rels_21 = interface.Relationships(2, 1)
+    self.assertEqual(rel_12, rels_12[0], rels_21[1])
+    self.assertEqual(rel_21, rels_12[1], rels_21[0])
+    self.assertFalse(rel_12 == rel_21)
+    rel_12 = interface.Relationship(1, 2, full=True)
+    rel_21 = interface.Relationship(2, 1, full=True)
+    rels_12 = interface.Relationships(1, 2, full=True)
+    rels_21 = interface.Relationships(2, 1, full=True)
+    self.assertEqual(rel_12, rels_12[0], rels_21[1])
+    self.assertEqual(rel_21, rels_12[1], rels_21[0])
+    self.assertFalse(rel_12 == rel_21)
+    with self.assertRaises(ValueError):
+      interface.Relationship(1, 1)
 
   def testGetForRelationship(self):
-    #TODO
-    pass
+    rel_key = model.Relationship(id=2, parent=interface.UKey(1)).key
+    model.MessageFile(id=123, parent=rel_key, blob="abc123").put()
+    blob = interface.GetForRelationship(model.MessageFile, 1, 2, 123).blob
+    self.assertEqual(blob, "abc123")
 
   def testLoadAccount(self):
     user, _, _ = interface.LoadAccount(1)
