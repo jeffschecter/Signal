@@ -11,7 +11,7 @@ from storage import model
 from test import testutils
 
 
-class InterfaceTest(unittest.TestCase):
+class InterfaceUtilsTest(unittest.TestCase):
 
   @classmethod
   def setUpClass(cls):
@@ -67,6 +67,18 @@ class InterfaceTest(unittest.TestCase):
     model.MessageFile(id=123, parent=rel_key, blob="abc123").put()
     blob = interface.GetForRelationship(model.MessageFile, 1, 2, 123).blob
     self.assertEqual(blob, "abc123")
+
+
+class InterfaceAccountTest(unittest.TestCase):
+
+  @classmethod
+  def setUpClass(cls):
+    cls.api = testutils.TestApi()
+    testutils.FakeUsers(2)
+
+  @classmethod
+  def tearDownClass(cls):
+    cls.api.Stop()
 
   def testLoadAccount(self):
     user, _, _ = interface.LoadAccount(1)
@@ -152,8 +164,21 @@ class InterfaceTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       interface.SetImage(1, testutils.Resource("intro.aac"))
 
+
+class InterfaceMessageTest(unittest.TestCase):
+
+  @classmethod
+  def setUpClass(cls):
+    cls.api = testutils.TestApi()
+    testutils.FakeUsers(2)
+
+  @classmethod
+  def tearDownClass(cls):
+    cls.api.Stop()
+
   def testCanMessage(self):
-    raise NotImplementedError
+    #TODO
+    pass
 
   def testSendMessageAndGetMessageFile(self):
     now = datetime.datetime.today()
@@ -206,6 +231,18 @@ class InterfaceTest(unittest.TestCase):
     self.assertEqual([now2, now3], sent_msg.retrieved)
     self.assertEqual([now2, now3], rcvd_msg.retrieved)
 
+
+class InterfaceGardenTest(unittest.TestCase):
+
+  @classmethod
+  def setUpClass(cls):
+    cls.api = testutils.TestApi()
+    testutils.FakeUsers(2)
+
+  @classmethod
+  def tearDownClass(cls):
+    cls.api.Stop()
+
   def testRandomGrowingPeriod(self):
     # This one's probabilistic
     periods = [interface.RandomGrowingPeriod() for _ in xrange(10000)]
@@ -241,13 +278,16 @@ class InterfaceTest(unittest.TestCase):
     self.assertEqual(None, send_again)
 
   def testWaterPayment(self):
-    raise NotImplementedError
+    #TODO
+    pass
 
   def testWaterInvite(self):
-    raise NotImplementedError
+    #TODO
+    pass
 
   def testWaterLotto(self):
-    raise NotImplementedError
+    #TODO
+    pass
 
 
 if __name__ == "__main__":

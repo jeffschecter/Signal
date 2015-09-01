@@ -37,7 +37,15 @@ class InterfaceTest(unittest.TestCase):
     _, args = self.api.Call("/garden/send", recipient=2, rose_number=1)
     self.assertFalse(args["success"])
 
-  def testWater(self):
+  def testWaterPayment(self):
+    #TODO
+    pass
+
+  def testWaterInvite(self):
+    #TODO
+    pass
+
+  def testWaterLotto(self):
     #TODO
     pass
 

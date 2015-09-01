@@ -1,4 +1,4 @@
-"""Endpoint input formats."""
+"""Reused endpoint input and output formats."""
 
 from google.appengine.ext import ndb
 
