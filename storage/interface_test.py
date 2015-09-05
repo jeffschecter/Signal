@@ -277,16 +277,39 @@ class InterfaceGardenTest(unittest.TestCase):
     send_again = interface.SendRose(1, 2, 1)
     self.assertEqual(None, send_again)
 
-  def testWaterPayment(self):
-    #TODO
+  def testWater(self):
+    user, _, _ = interface.CreateAccount("Foo", 0, 0)
+    uid = user.key.id()
+    self.assertEqual(None, interface.Water(uid, 0, amount=29900))
+    interface.SendRose(uid, 1, 3)
+    self.assertEqual(3, interface.Water(uid, 0, amount=29900))
+    rose = interface.GetGrowingRose(uid, 3)
+    self.assertTrue(
+        (rose.bloomed <= datetime.datetime.today()))
+    waterings = [_ for _ in model.Watering.query(ancestor=interface.UKey(uid))]
+    self.assertEqual(1, len(waterings))
+    self.assertEqual(0, waterings[0].kind)
+    self.assertEqual(29900, waterings[0].amount)
+
+  def testEligibleForWatering(self):
+    user, _, _ = interface.CreateAccount("Foo", 0, 0)
+    uid = user.key.id()
+    self.assertFalse(interface.EligibleForWatering(uid))
+    interface.SendRose(uid, 1, 3)
+    self.assertTrue(interface.EligibleForWatering(uid))
+    interface.Water(uid, 0, amount=29900)
+    self.assertFalse(interface.EligibleForWatering(uid))
+
+  def testMaybeWaterForPayment(self):
+    #TODO implement
     pass
 
-  def testWaterInvite(self):
-    #TODO
+  def testMaybeWaterForInvite(self):
+    #TODO implement
     pass
 
-  def testWaterLotto(self):
-    #TODO
+  def testMaybeWaterForLotto(self):
+    #TODO implement
     pass
 
 

@@ -112,7 +112,7 @@ def Relationships(sender, recipient, full=True):
 
 
 def GetForRelationship(model_class, agent, patient, ts):
-  """Retrieves a model.* for a given rel. and timestmap from the datastore.
+  """Retrieves a model.* for a given rel. and timestamp from the datastore.
 
   This only works for objects that have a relationship as their ancestor and
   are keyed by timestamp, including SentMessage, ReceivedMessage, SentRose,
@@ -164,7 +164,7 @@ def CreateAccount(name, latitude, longitude, now=None):
     name: (str) The user's nickname.
     latitude: (float) Degress latitude.
     longitude: (float) Degress longitude.
-    now: (datetime.datetime) To peg current time; for testing.
+    now: (datetime.datetime) To peg the current time; for testing.
 
   Returns:
     (model.User, model.MatchParameters, model.SearchSettings) For the newly
@@ -335,7 +335,7 @@ def SendMessage(sender, recipient, blob, now=None):
     sender: (int) The user object id of the sender.
     recipient: (int) The user object id of the recipient.
     blob: (str) Raw AAC file bytestring.
-    now: (datetime.datetime) To peg current time; for testing.
+    now: (datetime.datetime) To peg the current time; for testing.
 
   Returns:
     (datetime.datetime or None) Send time, or None if sending failed.
@@ -378,7 +378,7 @@ def GetMessageFile(sender, recipient, send_time, record_retrieval, now=None):
     send_time: (int or datetime.datetime) The message timestamp.
     record_retrieval: (bool) If true, unmark the message as new and record
       when it was retrieved.
-    now: (datetime.datetime) To peg current time; for testing.
+    now: (datetime.datetime) To peg the current time; for testing.
 
   Returns:
     (str) Raw aac file bytestring.
@@ -458,7 +458,7 @@ def SendRose(sender, recipient, rose_number, now=None):
     sender: (int) The user object id of the sender.
     recipient: (int) The user object id of the recipient.
     rose_number: (int) The id of the rose to send.
-    now: (datetime.datetime) To peg current time; for testing.
+    now: (datetime.datetime) To peg the current time; for testing.
 
   Returns:
     (datetime.datetime or None) Send time, or None if sending failed.
@@ -495,3 +495,72 @@ def SendRose(sender, recipient, rose_number, now=None):
   growing_rose.put()
 
   return now
+
+
+@ndb.transactional(xg=True)
+def Water(uid, kind, roses=None, **kwargs):
+  """Bloom the rose with the longest remaining time to bloom.
+
+  You can't water a rose that's scheduled to bloom within 10 minutes, or a rose
+  that's already bloomed.
+
+  Args:
+    uid: (int) The user's object id
+    kind: (int) 0 for paid, 1 for invite, 2 for lotto, ...
+    roses: (triple of model.Rose) The user's garden.
+    kwargs: (dict) Additional properties of the watering event.
+
+  Returns:
+    (int) The id of the bloomed rose, or None if no rose could be bloomed.
+  """
+  roses = roses or GetGarden(uid)
+  now = datetime.datetime.today()
+  greenest = max(roses, key=lambda rose: rose.bloomed)
+  if greenest.bloomed - now < datetime.timedelta(minutes=10):
+    return None
+
+  # Update bloom time and record watering event
+  greenest.bloomed = now
+  greenest.put()
+  watering = model.Watering(
+      parent=model.Garden(id=1, parent=UKey(uid)).key,
+      timestamp=now,
+      kind=kind,
+      **kwargs)
+  watering.put()
+
+  return greenest.key.id()
+
+
+def EligibleForWatering(uid, roses=None):
+  """Determines whether a user can water their garden.
+
+  Args:
+    uid: (int) The user's object id.
+    roses: (triple of model.Rose) The user's garden.
+
+  Returns:
+    (bool) Whether the user is allowed to water their garden.
+  """
+  now = datetime.datetime.today()
+  ts = common.Milis(now)
+  for water in model.Watering.query(ancestor=UKey(uid)).iter(keys_only=True):
+    if (ts - water.id()) < (24 * 60 * 60 * 1000):
+      return False
+  roses = roses or GetGarden(uid)
+  greenest = max(roses, key=lambda rose: rose.bloomed)
+  if greenest.bloomed - now < datetime.timedelta(minutes=10):
+    return False
+  return True
+
+
+def MaybeWaterForPayment():
+  raise NotImplementedError
+
+
+def MaybeWaterForInvite():
+  raise NotImplementedError
+
+
+def MaybeWaterForLotto():
+  raise NotImplementedError

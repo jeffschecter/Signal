@@ -101,7 +101,7 @@ class Watering(ndb.Expando):
   Different types of waterings will have different metadata fields.
 
   Ancestor: (User, Garden) The user's garden
-  Name: Auto
+  Name: (int) Timestmap, in miliseconds since epoch.
   """
   timestamp = ndb.DateTimeProperty()
   # 0=$$$, 1=invite friends, 2=lottery
