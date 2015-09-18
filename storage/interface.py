@@ -358,9 +358,11 @@ def SendMessage(sender, recipient, blob, now=None):
   model.ReceivedMessage(id=ts, parent=recipient_rel.key).put()
 
   # Update the last sent and last received message fields in the relationships
-  sender_rel.last_sent_message = now
+  sender_rel.last_sent_message = max(sender_rel.last_sent_message, now)
   sender_rel.put()
-  recipient_rel.last_received_message = now
+  recipient_rel.last_received_message = max(
+      recipient_rel.last_received_message, now)
+  recipient_rel.last_incoming = max(recipient_rel.last_incoming, now)
   recipient_rel.new_messages += 1
   recipient_rel.put()
 
@@ -483,9 +485,10 @@ def SendRose(sender, recipient, rose_number, now=None):
   model.ReceivedRose(parent=recipient_rel.key, **rose_kwargs).put()
 
   # Update the last sent and last received rose fields in the relationships
-  sender_rel.last_sent_rose = now
+  sender_rel.last_sent_rose = max(sender_rel.last_sent_rose, now)
   sender_rel.put()
-  recipient_rel.last_received_rose = now
+  recipient_rel.last_received_rose = max(recipient_rel.last_received_rose, now)
+  recipient_rel.last_incoming = max(recipient_rel.last_incoming, now)
   recipient_rel.new_roses += 1
   recipient_rel.put()
 
@@ -564,3 +567,120 @@ def MaybeWaterForInvite():
 
 def MaybeWaterForLotto():
   raise NotImplementedError
+
+
+# --------------------------------------------------------------------------- #
+# Get a user's interaction history / "inbox".                                 #
+# --------------------------------------------------------------------------- #
+
+def History(uid, offset=0, limit=10, cache_time=None, ascending=False,
+            new=False, saved_only=False, blocked_only=False,
+            sent_rose_only=False, received_rose_only=False,
+            sent_message_only=False, received_message_only=False,
+            visited_only=False, visited_by_only=False):
+  """Retrieves a summary of recent interactions for a user.
+
+  Default sort order is descending by last incoming communication. When the
+  query is limited to only sent or received roses or messages, sort order
+  is descending by last sent or received rose or message, respectively. When
+  limited to only profiles who the user visited or visited by, the last date
+  of that interaction is used instead.
+
+  Only one of the *_only args should be set.
+
+  Args:
+    uid: (int) The user's object id.
+    offset: (int) Start at the offset'th most recent interaction.
+    limit: (int) Retrieve the n most recent interactions.
+    cache_time: (datetime.datetime) Retrieve only interactions with profiles
+      that have been updated since this time.
+    ascending: (bool) If true, sort in ascending order of date.
+    new: (bool) Retrieve only interactions with profiles that have sent new
+      unlistened messages or new roses.
+    saved_only: (bool) Retrieve only interactions with saved profiles.
+    blocked_only: (bool) Retrieve only interactions with blocked profiles; else,
+      retrieved only interactions with non-blocked profiles.
+    sent_rose_only: (bool) Retrieve only interactions with profiles to whom
+      the user has sent a rose.
+    received_rose_only: (bool) Retrieve only interactions with profiles from
+      whom the user has received a rose.
+    sent_message_only: (bool) Retrieve only interactions with profiles  to
+      whom the user has sent a message.
+    received_message_only: (bool) Retrieve only interactions with profiles
+      from whom the user has received a message.
+    visited_only: (bool) Retrieve only interactions with profiles whom the
+      user has visited.
+    visited_by_only: (bool) Retrieve only interactions with profiles that
+      have visited the user.
+
+  Returns:
+    (list of dict) "Inbox" entries.
+  """
+  limit_args = (
+      saved_only, blocked_only, sent_rose_only, received_rose_only,
+      sent_message_only, received_message_only, visited_only, visited_by_only)
+  assert sum(limit_args) in (0, 1), "too many limiters"
+
+  # First, build the query
+  rel_cls = model.FullRelationship
+  order = (lambda p: p) if ascending else (lambda p: -p)
+  query = rel_cls.query(ancestor=UKey(uid))
+  if cache_time is not None:
+    query = query.filter(ndb.OR(
+        rel_cls.last_incoming > cache_time,
+        rel_cls.last_sent_rose > cache_time,
+        rel_cls.last_sent_message > cache_time))
+
+  # Apply the filters
+  if new:
+    query = query.filter(
+        ndb.OR(rel_cls.new_roses > 0, rel_cls.new_messages > 0))
+  if saved_only:
+    query = query.filter(rel_cls.saved == True)
+  query = query.filter(rel_cls.blocked == blocked_only)
+
+  # Apply the sort order, and filter out anything for which the sort order
+  # property is null.
+  if sent_rose_only:
+    sort_prop = rel_cls.last_sent_rose
+  elif received_rose_only:
+    sort_prop = rel_cls.last_received_rose
+  elif sent_message_only:
+    sort_prop = rel_cls.last_sent_message
+  elif received_message_only:
+    sort_prop = rel_cls.last_received_message
+  elif visited_only:
+    rel_cls.last_visited
+  elif visited_by_only:
+    rel_cls.last_visited_by
+  else:
+    sort_prop = rel_cls.last_incoming
+  query = query.filter(sort_prop > model.NEVER).order(order(sort_prop))
+
+  # Convert to dictionaries and add user names
+  full_rels = query.fetch(limit, offset=offset)
+  inbox = []
+  for rel in full_rels:
+    uid = rel.key.id()
+    user = GetUser(uid)
+    rel_dict = rel.to_dict()
+    del rel_dict["class_"]
+    rel_dict["uid"] = uid
+    rel_dict["name"] = user.name
+    inbox.append(rel_dict)
+
+  return inbox
+
+
+
+
+
+
+
+
+
+
+
+
+
+

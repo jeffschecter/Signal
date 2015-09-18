@@ -269,6 +269,9 @@ class InterfaceGardenTest(unittest.TestCase):
 
   def testSendRose(self):
     now = interface.SendRose(1, 2, 1)
+    sender_rel, recip_rel = interface.Relationships(1, 2, full=True)
+    self.assertEqual(sender_rel.last_sent_rose, now)
+    self.assertEqual(recip_rel.last_received_rose, now)
     interface.GetForRelationship(model.SentRose, 1, 2, now)
     interface.GetForRelationship(model.ReceivedRose, 2, 1, now)
     newly_planted_rose = interface.GetGrowingRose(1, 1)
@@ -312,6 +315,27 @@ class InterfaceGardenTest(unittest.TestCase):
     #TODO implement
     pass
 
+
+class InterfaceHistoryTest(unittest.TestCase):
+
+  @classmethod
+  def setUpClass(cls):
+    cls.api = testutils.TestApi()
+    testutils.FakeUsers(5)
+
+  def testHistory(self):
+    audio = testutils.Resource("intro.aac")
+    now = datetime.datetime.today()
+    r1 = interface.SendRose(1, 2, 1, now=now + datetime.timedelta(1))
+    r2 = interface.SendRose(3, 1, 1, now=now + datetime.timedelta(2))
+    interface.SendMessage(1, 4, audio, now=now + datetime.timedelta(3))
+    interface.SendMessage(5, 1, audio, now=now + datetime.timedelta(4))
+    by_last_incoming = interface.History(1)
+    by_last_sent_rose = interface.History(1, sent_rose_only=True)
+    by_last_received_rose = interface.History(1, received_rose_only=True)
+    by_last_sent_message = interface.History(1, sent_message_only=True)
+    by_last_received_message = interface.History(1, received_message_only=True)
+    
 
 if __name__ == "__main__":
   unittest.main()

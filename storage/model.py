@@ -1,7 +1,12 @@
 """Defines the data model for interacting with Datastore."""
 
+import datetime
+
 from google.appengine.ext import ndb
 from google.appengine.ext.ndb import polymodel
+
+
+NEVER = datetime.datetime(1970, 1, 1)
 
 
 class GeoCoordProperty(ndb.FloatProperty):
@@ -137,7 +142,10 @@ class Relationship(polymodel.PolyModel):
   Ancestor: (User) The "sender" or "agent"
   Name: (int) The "receiver" or "patient"
   """
-  last_profile_view = ndb.DateTimeProperty()
+  # Meaning last time the agent viewed the patient's profile.
+  last_visited = ndb.DateTimeProperty()
+  # And the reverse
+  last_visited_by = ndb.DateTimeProperty()
 
 
 class FullRelationship(Relationship):
@@ -146,10 +154,11 @@ class FullRelationship(Relationship):
   saved = ndb.BooleanProperty(default=False)
   new_roses = ndb.IntegerProperty(default=0)
   new_messages = ndb.IntegerProperty(default=0)
-  last_sent_rose = ndb.DateTimeProperty()
-  last_received_rose = ndb.DateTimeProperty()
-  last_sent_message = ndb.DateTimeProperty()
-  last_received_message = ndb.DateTimeProperty()
+  last_sent_rose = ndb.DateTimeProperty(default=NEVER)
+  last_received_rose = ndb.DateTimeProperty(default=NEVER)
+  last_sent_message = ndb.DateTimeProperty(default=NEVER)
+  last_received_message = ndb.DateTimeProperty(default=NEVER)
+  last_incoming = ndb.DateTimeProperty(default=NEVER)
 
 
 class SentRose(Rose):

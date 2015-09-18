@@ -13,7 +13,7 @@ from storage import model
 from test import testutils
 
 
-class InterfaceTest(unittest.TestCase):
+class GardenTest(unittest.TestCase):
 
   @classmethod
   def setUpClass(cls):
