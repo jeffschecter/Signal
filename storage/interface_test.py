@@ -335,7 +335,9 @@ class InterfaceHistoryTest(unittest.TestCase):
     by_last_received_rose = interface.History(1, received_rose_only=True)
     by_last_sent_message = interface.History(1, sent_message_only=True)
     by_last_received_message = interface.History(1, received_message_only=True)
-    
+    #TODO assertions
+    #TODO saved, blocked, visited
+
 
 if __name__ == "__main__":
   unittest.main()
