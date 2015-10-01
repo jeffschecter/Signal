@@ -670,17 +670,3 @@ def History(uid, offset=0, limit=10, cache_time=None, ascending=False,
     inbox.append(rel_dict)
 
   return inbox
-
-
-
-
-
-
-
-
-
-
-
-
-
-

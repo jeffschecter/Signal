@@ -1,6 +1,6 @@
 # pylint: disable=missing-docstring
 
-"""Endpoints for working with a user"s history."""
+"""Endpoints for working with a user's history."""
 
 from google.appengine.ext import ndb
 from handlers.lib import ioformat
